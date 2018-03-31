@@ -9,8 +9,7 @@
 clear;
 %% Configure
 
-SpiralName = '24Sept15-Caddesign';
-PCBfile = 'testPCB';
+PCBfile = 'PCBdata';
 
 L = 46.5;  % Length of magnet
 HousingRadius = 29.35;              % 29.35 I calculated this as 29.329 mm (from pcb width)
@@ -28,11 +27,7 @@ Yo = 0;
 
 %% Initialize vars
 
-dr = (SubstrateThickness/2) + (WireThickness/2);    % Total circuit thickness = 2dr
-R = HousingRadius; % - (WireThickness + SubstrateThickness/2);  % IMPORTANT UNCOMMENT
-RBot = HousingRadius;
-RTop = HousingRadius;
-
+R = HousingRadius;
 N = spirals*2+2;
 dz = L/N;
 n = Multipole/2;  % coefficent for multipole expansion
@@ -54,7 +49,6 @@ FTopSpiral = [F, 1/n * asin(1 - (2*(L/2-dz*(spirals+1))/(a * L))^2)];
 ZBotSpiral = [Z, L/2-dz*(spirals+1)];
 FBotSpiral = [1/n * asin(1 - (2*(L/2-dz*0)/(a * L))^2), F]; 
 
-% Fdeg = F.*180./pi;
 
 
 %% Plot Cylindrical
@@ -206,7 +200,6 @@ cyls ={TopRightSpiral_cyl, BotRightSpiral_cyl, TopLeftSpiral_cyl, BotLeftSpiral_
 % flip BotSpirals - they iterate in opposite direction
 flats = {TopRightSpiral_flat, flip(BotRightSpiral_flat,2), TopLeftSpiral_flat, flip(BotLeftSpiral_flat,2)};
 carts = cell(1,4);
-R_cur = [RTop, RBot, RTop, RBot];
 
 PCBs = {[],[],[],[]};
 
@@ -217,7 +210,7 @@ for ii=1:length(cyls)
     PCB = PCBs{ii};
     
     % cyl = cyl(r,f,z)
-    cyl(1,:) = R_cur(ii)*ones(1,length(flat));
+    cyl(1,:) = R(ii)*ones(1,length(flat));
     cyl(2,:) = flat(1,:)./R;
     cyl(3,:) = flat(2,:);
     
@@ -229,7 +222,7 @@ for ii=1:length(cyls)
     end
     
     % PCB = PCB(x,y)
-    PCB(1,:) = flat(1,:)./R.*R_cur(ii);
+    PCB(1,:) = flat(1,:);
     PCB(2,:) = flat(2,:);
     
     cyls{ii} = cyl;

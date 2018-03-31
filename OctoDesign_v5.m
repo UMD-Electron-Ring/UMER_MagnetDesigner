@@ -2,14 +2,8 @@
 
 % Revision History:
 % 
-% v3:  
+% v5: Version for producing octupole magnets, design octo_2015a 
 
-
-%%  Scratch DELETE
-
-% pcb length = 92.2
-
-% 
 %% Clear Vars
 
 clear;
@@ -33,8 +27,6 @@ Xo = 0;
 Yo = 0;
 
 %% Initialize vars
-
-filename = strcat(SpiralName, '.txt');
 
 dr = (SubstrateThickness/2) + (WireThickness/2);    % Total circuit thickness = 2dr
 R = HousingRadius; % - (WireThickness + SubstrateThickness/2);  % IMPORTANT UNCOMMENT
@@ -256,67 +248,9 @@ plot3(FinalSpiral_cart(1,:), FinalSpiral_cart(2,:), FinalSpiral_cart(3,:));
 
     
 
-%% Export Data for Simulation
-
-csvwrite(filename, FinalSpiral);
-
 %% Export Data for PCB design
 
 save(PCBfile, 'PCBs');
-
-%% TODO: Modified Data for simulation:  top is translated up from bottom 
-%        with same radius,  rather than top and bottom being at two 
-%        different radii
-
-docNode = com.mathworks.xml.XMLUtils.createDocument('magnet');  % XML obj
-
-% Magnet Attributes
-magnet = docNode.getDocumentElement;
-magnet.setAttribute('version','A1');
-
-% Create Spirals
-startSeg = {'arc','arc','line','arc'};
-TopBot =   {'top','bot','top','bot'};
-for ii=1:length(cyls)
-    cur_node = docNode.createElement('spiral');
-    cur_node.setAttribute('startType',startSeg{ii});
-    cur_node.setAttribute('TopBot',TopBot{ii});
-    magnet.appendChild(cur_node);
-    
-    % Create Points
-    for jj=1:length(cyls{ii})
-        point_node = docNode.createElement('point');
-        
-        point_node.setAttribute('index', num2str(jj));
-        % is it a terminal point?
-        if (ii==1 && jj==1) 
-            point_node.setAttribute('place','start');
-        elseif (ii==4 && jj==length(cyls{4}))
-            point_node.setAttribute('place','end');
-        end
-        
-        cur_node.appendChild(point_node);
-        
-        % Create x,y,z,f,r
-        names = {'x','y','z','f','r'};
-        vals  = {carts{ii}(1,jj), carts{ii}(2,jj), cyls{ii}(3,jj),...
-                 cyls{ii}(2,jj), cyls{ii}(1,jj) };   
-        for kk=1:5
-            crd_node = docNode.createElement( names{kk} );
-            crd_node.appendChild(...
-                docNode.createTextNode(num2str( vals{kk} )));
-            
-            point_node.appendChild(crd_node);
-        end
-        clear names vals crd_node % TODO: getting rid of crd_node maybe bad
-
-    end
-    clear point_node
-
-end
-clear topbot cur_node
-
-xmlwrite('test2.xml',docNode);
         
 
 

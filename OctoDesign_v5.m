@@ -7,24 +7,18 @@
 %% Clear Vars
 
 clear;
-%% Configure
+%% Configure. USERS CHANGE THIS SECTION FOR GENERATING DESIGNS
 
-PCBfile = 'PCBdata';
+PCBfilename = 'PCBdata';
 
 L = 46.5;  % Length of magnet
-HousingRadius = 29.35;              % 29.35 I calculated this as 29.329 mm (from pcb width)
-SubstrateThickness = .2667;
-WireThickness = .0889;
-Multipole = 8;      
-
+HousingRadius = 29.35;   % 29.35 I calculated this as 29.329 mm (from pcb width)
+Multipole = 8;  % Octupole
 spirals = 10;
-a = .953;
+a = .953;   % Optimization parameter
 
-% Origin of flat sketch
 
-Xo = 0;
-Yo = 0;
-
+% EVERYTHING BELOW USERS NEED NOT CHANGE
 %% Initialize vars
 
 R = HousingRadius;
@@ -33,6 +27,12 @@ dz = L/N;
 n = Multipole/2;  % coefficent for multipole expansion
 
 %% Calculate F (phi) for axial conductors
+% A current sheet that produces a pure multipole field has a cosine
+% dependence with respect to phi, {K(phi) ~ cos(n*phi)}.  If one changes
+% the current density by changing the length of the conductor in the Z
+% direction, one can derive a formula that relates the length the
+% conductor needs in Z, to the conductor's azimuthal position phi.  This
+% is the equation for F seen below, F = F(Z).
 
 Z = zeros(1,spirals);
 F = zeros(1,spirals);
@@ -82,13 +82,14 @@ spiralIdx(spirals*4+1) = spirals + 1;
 
 %% Convert (r,phi,z) coordinates to (x,y)
 
-% On the flat printed circut, F (phi) corresponds to the "x" axis,
+% On the flat printed circut,
+% R*F (Radius*phi = arclength) corresponds to the "x" axis,
 % and Z corresponds to the "y" axis
 
 % Top
-TopRightSpiral = [FTopSpiral(spiralIdx); ZTopSpiral(spiralIdx)];
+TopRightSpiral = [R*FTopSpiral(spiralIdx); ZTopSpiral(spiralIdx)];
 % Bottom
-BotRightSpiral = [FBotSpiral(spiralIdx); ZBotSpiral(spiralIdx)];
+BotRightSpiral = [R*FBotSpiral(spiralIdx); ZBotSpiral(spiralIdx)];
 
 %               *Diagnostic Graphs*
 % figure
@@ -166,59 +167,15 @@ TopRightSpiral = horzcat([-BotLeftSpiral(1,1); BotLeftSpiral(2,1)], TopRightSpir
 
 %% Wrap em up
 
-TopRightSpiral_cyl = zeros(3,size(TopRightSpiral,2));
-BotRightSpiral_cyl = zeros(3,size(BotRightSpiral,2));
-TopLeftSpiral_cyl  = zeros(3,size(TopLeftSpiral,2));
-BotLeftSpiral_cyl  = zeros(3,size(BotLeftSpiral,2));
-
-cyls ={TopRightSpiral_cyl, BotRightSpiral_cyl, TopLeftSpiral_cyl, BotLeftSpiral_cyl};
 % flip BotSpirals - they iterate in opposite direction
-flats = {TopRightSpiral, flip(BotRightSpiral,2), TopLeftSpiral, flip(BotLeftSpiral,2)};
-carts = cell(1,4);
-
-PCBs = {[],[],[],[]};
-
-for ii=1:length(cyls)
-    cyl = cyls{ii};
-    flat = flats{ii};
-    cart = carts{ii};
-    PCB = PCBs{ii};
-    
-    % cyl = cyl(r,f,z)
-    cyl(1,:) = R(ii)*ones(1,length(flat));
-    cyl(2,:) = flat(1,:)./R;
-    cyl(3,:) = flat(2,:);
-    
-    [cart(1,:), cart(2,:)] = pol2cart(cyl(2,:), cyl(1,:));
-    if mod(ii, 2)==0
-        cart(1,:) = cart(1,:) - SubstrateThickness/2;
-    elseif mod(ii,2)==1
-        cart(1,:) = cart(1,:) + SubstrateThickness/2;
-    end
-    
-    % PCB = PCB(x,y)
-    PCB(1,:) = flat(1,:);
-    PCB(2,:) = flat(2,:);
-    
-    cyls{ii} = cyl;
-    PCBs{ii} = PCB;
-    carts{ii} = cart;
-end
-
-% put em together
-
-FinalSpiral = [cyls{1}, cyls{2}, cyls{3}, cyls{4}];     % FS(R, F, Z)
-
-[FinalSpiral_cart(1,:), FinalSpiral_cart(2,:), FinalSpiral_cart(3,:)] = pol2cart(FinalSpiral(2,:), FinalSpiral(1,:), FinalSpiral(3,:)); % FS_c(x,y,z)
-
-figure;
-plot3(FinalSpiral_cart(1,:), FinalSpiral_cart(2,:), FinalSpiral_cart(3,:));
-
-    
+% This doesn't seem to be useful for printed circuit data, but it
+% may be helpful for generating 3D cylindrical data for simulation.
+PCB = {TopRightSpiral, flip(BotRightSpiral,2), TopLeftSpiral, flip(BotLeftSpiral,2)};
+   
 
 %% Export Data for PCB design
 
-save(PCBfile, 'PCBs');
+save(PCBfilename, 'PCB');
         
 
 

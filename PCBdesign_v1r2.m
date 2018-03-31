@@ -15,9 +15,9 @@ termD = '2.8';                % terminal diameter (aperture + plating)  mm
 
 Macrofile = 'testMacro.scr';
 
-RawData = load('testPCB');
+RawData = load('PCBdata');
 
-RawData = RawData.PCBs;
+RawData = RawData.PCB;
 
 fid = fopen(Macrofile,'w');
 

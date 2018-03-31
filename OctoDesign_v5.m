@@ -32,7 +32,7 @@ N = spirals*2+2;
 dz = L/N;
 n = Multipole/2;  % coefficent for multipole expansion
 
-%% Calculate F for axial conductors
+%% Calculate F (phi) for axial conductors
 
 Z = zeros(1,spirals);
 F = zeros(1,spirals);
@@ -42,34 +42,29 @@ for ii=1:spirals
 
 end
 
+% Shift Z(:) and F(:) by dz and df (a function of dz) to prepare spirals
+% (Without a shift, nested rectangles would be produced).
+% The top and bottom spirals (which will be on the top and bottom layer
+% of the 2-layer printed circuit) are shifted differently to accomodate
+% a continuous conduction path for current through all 4 spirals.
+ZTopShift = [L/2-dz*0, Z];
+FTopShift = [F, 1/n * asin(1 - (2*(L/2-dz*(spirals+1))/(a * L))^2)]; 
 
-ZTopSpiral = [L/2-dz*0, Z];
-FTopSpiral = [F, 1/n * asin(1 - (2*(L/2-dz*(spirals+1))/(a * L))^2)]; 
-
-ZBotSpiral = [Z, L/2-dz*(spirals+1)];
-FBotSpiral = [1/n * asin(1 - (2*(L/2-dz*0)/(a * L))^2), F]; 
-
-
-
-%% Plot Cylindrical
-
-% Zplot = [-Z, Z, Z, -Z];             
-% Fplot = [F, F, pi/2-F, pi/2-F];
-%
-% [x,y,z] = pol2cart(Fplot, R*ones(1,80), Zplot);
+ZBotShift = [Z, L/2-dz*(spirals+1)];
+FBotShift = [1/n * asin(1 - (2*(L/2-dz*0)/(a * L))^2), F]; 
 
 
-ZTopPlot = [-ZTopSpiral, Z, Z, -Z];             
-FTopPlot = [FTopSpiral, F, pi/n-F, pi/n-F]; % Fplot( BL TL TR BR )
 
-ZBotPlot = [-ZBotSpiral, -Z, Z, Z];
-FBotPlot = [FBotSpiral, pi/n-F, pi/n-F, F]; % FBotPlot( BL BR TR TL)
+%% Prepare coordinate data for each spiral 
+%  (Right now there are only two spirals.  The last two will be created
+%  by reflecting these over a plane.
 
-[xTop,yTop,zTop] = pol2cart(FTopPlot, R*ones(1,spirals*4+1), ZTopPlot);
-[xBot,yBot,zBot] = pol2cart(FBotPlot, R*ones(1,spirals*4+1), ZBotPlot);
 
-% figure
-% scatter3(xTop,yTop,zTop);
+ZTopSpiral = [-ZTopShift, Z, Z, -Z];             
+FTopSpiral = [FTopShift, F, pi/n-F, pi/n-F]; % Coord order: BL TL TR BR
+
+ZBotSpiral = [-ZBotShift, -Z, Z, Z];
+FBotSpiral = [FBotShift, pi/n-F, pi/n-F, F]; % Coord order: BL BR TR TL
 
 
 %% Connect spirals in right sequence

@@ -2,32 +2,26 @@
 
 DESCRIPTION
 
-This directory has all of the scripts in one place to easily generate magnet designs.
+Easily generate octupole printed circuit magnet designs for particle accelerator nonlinear optics.
 
 
 HOW TO
-
-To generate Maxwell model
-
-    1. OctoDesign_v5.m
-    2. Run OctupoleDesign_v1r1.py as a macro inside of Ansys Maxwell
-    3. User must connect conductors and configure boundaries & excitations by hand in the Maxwell modeler.
-            See ../UMEROctupoleModelHowTo.docx
     
 To generate Gerber files
 
-    1. OctoDesign_v5.m
-    2. PCBdesign_v1r2.m
+    1. Run OctoDesign_v5.m
+    2. Run PCBdesign_v1r2.m
     3. Open Cadsoft EAGLE.  Create a new board (File -> New -> Board).
-    4. In the "Board" window, File -> Execute Script.  Choose testMacro.scr in the Plug_n_Play directory.
-    5. To generate the NSF logo on the PCB, execute the LogoMacroPCB.scr script.
+    4. In the "Board" window, File -> Execute Script.  Choose testMacro.scr in this directory.
+    5. To generate the NSF logo on the PCB, execute the LogoMacroPCB.scr script (File -> Execute Script).
     
     Once Satisfied with the design:
     
-    1. In "Board" window: File -> CAM Processor
-    2. File -> Open -> Job...
-    3. Open gerb274x-octupole.cam for gerber files; open excellon-octupole.cam for excellon drilling files.
-    4. Click "Process Job" to generate the files.
+    1. Save the board file (File -> Save)
+    2. In "Board" window: File -> CAM Processor
+    3. File -> Open -> Job...
+    4. Open gerb274x-octupole.cam for gerber files; open excellon-octupole.cam for excellon drilling files.
+    5. Click "Process Job" to generate the files.
     
 To clean the directory
 

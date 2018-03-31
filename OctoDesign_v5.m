@@ -70,130 +70,110 @@ FBotSpiral = [FBotShift, pi/n-F, pi/n-F, F]; % Coord order: BL BR TR TL
 %% Connect spirals in right sequence
 
 
-SeqRect = zeros(1,20);
-for i=0:19
-    SeqRect(4*i+1) = i + 1;      % BL
-    SeqRect(4*i+2) = i + 21;     % TL
-    SeqRect(4*i+3) = i + 41;     % TR
-    SeqRect(4*i+4) = i + 61;     % BR
-end
-
-SeqSpiral = zeros(1,spirals*4+1);
+spiralIdx = zeros(1,spirals*4+1);
 for i=0:spirals-1
-    SeqSpiral(4*i+1) = i + 1;      % BL  Fplot(1:21)
-    SeqSpiral(4*i+2) = i + 1*spirals + 2;     % TL  Fplot(22:41)
-    SeqSpiral(4*i+3) = i + 2*spirals + 2;     % TR
-    SeqSpiral(4*i+4) = i + 3*spirals + 2;     % BR
+    spiralIdx(4*i+1) = i + 1;      % BL  Fplot(1:21)
+    spiralIdx(4*i+2) = i + 1*spirals + 2;     % TL  Fplot(22:41)
+    spiralIdx(4*i+3) = i + 2*spirals + 2;     % TR
+    spiralIdx(4*i+4) = i + 3*spirals + 2;     % BR
 end
-SeqSpiral(spirals*4+1) = spirals + 1;
+spiralIdx(spirals*4+1) = spirals + 1;
 
 
-figure;
-plot3(xTop(SeqSpiral),yTop(SeqSpiral),zTop(SeqSpiral));
-figure;
-plot3(xBot(SeqSpiral),yBot(SeqSpiral),zBot(SeqSpiral));
+%% Convert (r,phi,z) coordinates to (x,y)
 
-%% Make 'em flat
+% On the flat printed circut, F (phi) corresponds to the "x" axis,
+% and Z corresponds to the "y" axis
 
-% Function [x, y] = MakeItFlat(Fplot, Zplot, R)
-
-YTopflat = Yo + ZTopPlot;
-XTopflat = Xo + R*FTopPlot;
-
-TopRightSpiral_flat = [XTopflat(SeqSpiral); YTopflat(SeqSpiral)];
-
-figure
-plot(TopRightSpiral_flat(1,:),TopRightSpiral_flat(2,:));
-
+% Top
+TopRightSpiral = [FTopSpiral(spiralIdx); ZTopSpiral(spiralIdx)];
 % Bottom
+BotRightSpiral = [FBotSpiral(spiralIdx); ZBotSpiral(spiralIdx)];
 
-YBotflat = Yo + ZBotPlot;
-XBotflat = Xo + R*FBotPlot;
-
-BotRightSpiral_flat = [XBotflat(SeqSpiral); YBotflat(SeqSpiral)];
-
-figure
-plot(BotRightSpiral_flat(1,:),BotRightSpiral_flat(2,:));
+%               *Diagnostic Graphs*
+% figure
+% plot(TopRightSpiral(1,:),TopRightSpiral(2,:));
+% figure
+% plot(BotRightSpiral(1,:),BotRightSpiral(2,:));
 
 %% Make rotated/reflected models of spiral
 
-% TopLeft: TopRight reflected over x=0
-TopLeftSpiral_flat = [-1 0; 0 1] * TopRightSpiral_flat;
+% TopLeft: TopRight reflected over line x=0
+TopLeftSpiral = [-1 0; 0 1] * TopRightSpiral;
+% BotRight: BotLeft reflected over line x=0
+BotLeftSpiral = [-1 0; 0 1] * BotRightSpiral;
 
-% BotRight: BotLeft reflected over x=0
-BotLeftSpiral_flat = [-1 0; 0 1] * BotRightSpiral_flat;
+%               *Diagnostic Graphs*
+% figure;
+% hold on;
+% plot(TopRightSpiral(1,:),TopRightSpiral(2,:));
+% plot(TopLeftSpiral(1,:),TopLeftSpiral(2,:));
+% hold off
+% 
+% figure;
+% hold on;
+% plot(BotRightSpiral(1,:),BotRightSpiral(2,:));
+% plot(BotLeftSpiral(1,:),BotLeftSpiral(2,:));
+% hold off;
 
-figure;
-hold on;
-plot(TopRightSpiral_flat(1,:),TopRightSpiral_flat(2,:));
-plot(TopLeftSpiral_flat(1,:),TopLeftSpiral_flat(2,:));
-hold off
+%% Make manual modifications on flat model
+% To understand what each line does, it may be most helpful to comment
+% out the line, and plot the change using the diagnostic graphs.
+% Note the diagnostic graphs are 3D, so you can use the plot rotate tool.
 
-figure;
-hold on;
-plot(BotRightSpiral_flat(1,:),BotRightSpiral_flat(2,:));
-plot(BotLeftSpiral_flat(1,:),BotLeftSpiral_flat(2,:));
-hold off;
 
-%% Make modifications on flat model
-% --- IMPORTANT: BotRight and TopLeft vias aren't aligned as on printed circuit.
-% ---            Really TopLeft and TopRight outside vias should be aligned
-% ---            (so BotRight and TopLeft are misaligned in y by dz). The wire
-% ---            width makes up for this in real life.
-
-%               *Alignment*
+%               *Vias*
 % TopLeft Outside via alignment
-TopLeftSpiral_flat(2,1) = TopLeftSpiral_flat(2,5);
+TopLeftSpiral(2,1) = TopLeftSpiral(2,5);
 
 % BotRight Outside via alignment (with TopLeft)
-BotRightSpiral_flat(1,1) = TopLeftSpiral_flat(1,1);
+BotRightSpiral(1,1) = TopLeftSpiral(1,1);
 
-% TENTATIVE: BotLeft Outside via alignment (don't collide with BotRight)
-BotLeftSpiral_flat(1,1) = BotLeftSpiral_flat(1,9);
+% BotLeft Outside via alignment (don't collide with BotRight)
+BotLeftSpiral(1,1) = BotLeftSpiral(1,9);
 
 % Align inside vias (we have to add points here, not replace)
-BotLeftSpiral_flat = horzcat(BotLeftSpiral_flat, [TopLeftSpiral_flat(1,end); BotLeftSpiral_flat(2,end)]);
-TopLeftSpiral_flat = horzcat(TopLeftSpiral_flat, [TopLeftSpiral_flat(1,end); BotLeftSpiral_flat(2,end)]);
+BotLeftSpiral = horzcat(BotLeftSpiral, [TopLeftSpiral(1,end); BotLeftSpiral(2,end)]);
+TopLeftSpiral = horzcat(TopLeftSpiral, [TopLeftSpiral(1,end); BotLeftSpiral(2,end)]);
 
-BotRightSpiral_flat = horzcat(BotRightSpiral_flat, [TopRightSpiral_flat(1,end); BotRightSpiral_flat(2,end)]);
-TopRightSpiral_flat = horzcat(TopRightSpiral_flat, [TopRightSpiral_flat(1,end); BotRightSpiral_flat(2,end)]);
+BotRightSpiral = horzcat(BotRightSpiral, [TopRightSpiral(1,end); BotRightSpiral(2,end)]);
+TopRightSpiral = horzcat(TopRightSpiral, [TopRightSpiral(1,end); BotRightSpiral(2,end)]);
 
 
 %               *Terminals*
 %      This we can expt with.  I started with an extra dz down from L/2
 
 % BotLeft
-BotLeftSpiral_flat = horzcat([BotLeftSpiral_flat(1,1); -(L/2)], BotLeftSpiral_flat);
+BotLeftSpiral = horzcat([BotLeftSpiral(1,1); -(L/2)], BotLeftSpiral);
 
 % TopRight Outside via align with BotLeft -- DONT MODIFY (it's the above reflected over x axis)
-TopRightSpiral_flat = horzcat([-BotLeftSpiral_flat(1,1); BotLeftSpiral_flat(2,1)], TopRightSpiral_flat);
+TopRightSpiral = horzcat([-BotLeftSpiral(1,1); BotLeftSpiral(2,1)], TopRightSpiral);
 
 
 %               *Diagnostic graphs*
-
-% z coords are arbitrary width
-z_arb = 3;
-
-figure;
-hold on;
-plot3(TopRightSpiral_flat(1,:),TopRightSpiral_flat(2,:),z_arb*ones(length(TopRightSpiral_flat)));
-plot3(TopLeftSpiral_flat(1,:),TopLeftSpiral_flat(2,:),z_arb*ones(length(TopLeftSpiral_flat)));
-
-plot3(BotRightSpiral_flat(1,:),BotRightSpiral_flat(2,:),-z_arb*ones(length(BotRightSpiral_flat)));
-plot3(BotLeftSpiral_flat(1,:),BotLeftSpiral_flat(2,:),-z_arb*ones(length(BotLeftSpiral_flat)));
-hold off;
+% % Used to plot the spirals on top of eachother.
+% spacing = 3;
+% 
+% figure;
+% hold on;
+% plot3(TopRightSpiral(1,:),TopRightSpiral(2,:),spacing*ones(length(TopRightSpiral)));
+% plot3(TopLeftSpiral(1,:),TopLeftSpiral(2,:),spacing*ones(length(TopLeftSpiral)));
+% 
+% plot3(BotRightSpiral(1,:),BotRightSpiral(2,:),-spacing*ones(length(BotRightSpiral)));
+% plot3(BotLeftSpiral(1,:),BotLeftSpiral(2,:),-spacing*ones(length(BotLeftSpiral)));
+% hold off;
 
 
 %% Wrap em up
 
-TopRightSpiral_cyl = zeros(3,size(TopRightSpiral_flat,2));
-BotRightSpiral_cyl = zeros(3,size(BotRightSpiral_flat,2));
-TopLeftSpiral_cyl  = zeros(3,size(TopLeftSpiral_flat,2));
-BotLeftSpiral_cyl  = zeros(3,size(BotLeftSpiral_flat,2));
+TopRightSpiral_cyl = zeros(3,size(TopRightSpiral,2));
+BotRightSpiral_cyl = zeros(3,size(BotRightSpiral,2));
+TopLeftSpiral_cyl  = zeros(3,size(TopLeftSpiral,2));
+BotLeftSpiral_cyl  = zeros(3,size(BotLeftSpiral,2));
 
 cyls ={TopRightSpiral_cyl, BotRightSpiral_cyl, TopLeftSpiral_cyl, BotLeftSpiral_cyl};
 % flip BotSpirals - they iterate in opposite direction
-flats = {TopRightSpiral_flat, flip(BotRightSpiral_flat,2), TopLeftSpiral_flat, flip(BotLeftSpiral_flat,2)};
+flats = {TopRightSpiral, flip(BotRightSpiral,2), TopLeftSpiral, flip(BotLeftSpiral,2)};
 carts = cell(1,4);
 
 PCBs = {[],[],[],[]};

@@ -7,7 +7,9 @@ for %%i in (*) do (
                     if not %%~xi == .docx (
                         if not %%i == LogoMacroPCB.scr (
                             if not %%i == README.txt (
-                                del %%i
+                                if not %%i == .gitignore (
+                                    del %%i
+                                )
                             )
                         )
                     )

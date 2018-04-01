@@ -1,26 +1,29 @@
-%% Configure
+%% Configure. USERS CHANGE THIS SECTION FOR GENERATING DESIGNS
+% NOTE: To change the silk screen custom text, look at 
+MacroFilename = 'BoardMacro.scr';
+
+organization = 'UMER Nonlinear Optics';   % For display on silkscreen
+designNumber = 'Octo_2015a';              % For display on silkscreen
 
 PCBlength = 79.45-20.55; % mm
 PCBwidth  = 146.1-53.9;
-
 wireWidth = '.8';
 
-viaAp  = '.6';              % via aperture      (drill size)          mm
-termAp = '1.1';               % terminal aperture (drill size)          mm
+viaAp  = '.6';             % via aperture      (drill size)          mm
+termAp = '1.1';            % terminal aperture (drill size)          mm
 
 viaD  = '1';               % via diameter      (aperture + plating)  mm
-termD = '2.8';                % terminal diameter (aperture + plating)  mm
+termD = '2.8';             % terminal diameter (aperture + plating)  mm
 
+% EVERYTHING BELOW USERS NEED NOT CHANGE
 %% Load Data
 
-Macrofile = 'testMacro.scr';
-
 RawData = load('PCBdata');
-
 RawData = RawData.PCB;
+% Open macro file to write
+fid = fopen(MacroFilename,'w');
 
-fid = fopen(Macrofile,'w');
-
+%% Initial Settings
 fprintf(fid, 'grid mm finest;\n');
 
 %% Define Board dims
@@ -34,8 +37,8 @@ fprintf(fid, ';\n');
 
 %% top and bottom wire layers
 
-Leftys = {[],[],[],[]};
-Rightys = {[],[],[],[]};
+Lefts = {[],[],[],[]};
+Rights = {[],[],[],[]};
 
 for ii=1:4
     LeftSpiral = RawData{ii};
@@ -44,11 +47,11 @@ for ii=1:4
     LeftSpiral(1,:) = LeftSpiral(1,:) - PCBwidth/4;
     RightSpiral(1,:) = RightSpiral(1,:) + PCBwidth/4;
     
-    Leftys{ii} = LeftSpiral;
-    Rightys{ii} = RightSpiral;
+    Lefts{ii} = LeftSpiral;
+    Rights{ii} = RightSpiral;
 end
 
-all = {Leftys, Rightys};
+all = {Lefts, Rights};
 
 for jj=1:2
     iter = all{jj};
@@ -76,12 +79,12 @@ end
 % via locations (last indices of first 3 spirals)
 viaLs = [];
 for ii=1:3
-    viaLs = [viaLs Leftys{ii}(:,end)];
-    viaLs = [viaLs Rightys{ii}(:,end)];
+    viaLs = [viaLs Lefts{ii}(:,end)];
+    viaLs = [viaLs Rights{ii}(:,end)];
 end
 
 % terminal locations (first idx of first spiral, last idx of last spiral)
-termLs = [Leftys{1}(:,1) Leftys{4}(:,end) Rightys{1}(:,1) Rightys{4}(:,end)];
+termLs = [Lefts{1}(:,1) Lefts{4}(:,end) Rights{1}(:,1) Rights{4}(:,end)];
 
 
 fprintf(fid, ['change drill ' viaAp ';\n']);
@@ -121,26 +124,14 @@ fprintf(fid, ';\n');
 fprintf(fid, 'change font vector;\n change size 1.9;\n');
 
 fprintf(fid, 'layer bPlace;\n');
-% fprintf(fid, 'text UMER 15 c (21 26);\n');
-% fprintf(fid, 'text OCTO1Y (-15 26);\n');
 fprintf(fid, 'text Inside (12 -28);\n');
 
-fprintf(fid, 'text UMER Nonlinear Optics (16.8 23);\n');
-
-% Copyright Circles.  Prob Temp
-% fprintf(fid, 'circle .15 (7.8 26.6) (6.6 26.6);\n');
-% ---
+fprintf(fid, ['text ' organization ' (16.8 23);\n']);
 
 fprintf(fid, 'layer tPlace;\n');
-% fprintf(fid, 'text UMER 15 c (-21 26);\n');
-% fprintf(fid, 'text OCTO1X (15 26);\n');
 fprintf(fid, 'text Outside (-12 -28);\n');
 
-fprintf(fid, 'text Octo_2015a (7 24.5);\n');
-
-% Copyright Cirles.  Probably Temporary
-% fprintf(fid, 'circle .15 (-7.8 26.6) (-6.6 26.6);\n');
-% ---
+fprintf(fid, ['text ' designNumber ' (7 24.5);\n']);
 
 fprintf(fid, 'change size 1.3;\n');
 fprintf(fid, 'text Blk (18 -26.1);\n');
@@ -148,16 +139,6 @@ fprintf(fid, 'text Red (25 -26.1);\n');
 fprintf(fid, 'text Blk (-28 -26.1);\n');
 fprintf(fid, 'text Red (-21 -26.1);\n');
 
-%% TODO:  Temporary.  Testing dimensions to optimize 'a'
-
-% fprintf(fid, 'change dunit mm on 4;\n');
-% 
-% fprintf(fid, 'dimension horizontal (>.70 21) (>-.70 21) (.75 22.5);\n');
-% fprintf(fid, 'dimension horizontal (2 18.5) (.70 21) (2 27.3);\n');
-
-
-%%
-
-
+%% Close the macro file
 
 fclose(fid);

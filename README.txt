@@ -12,7 +12,7 @@ To generate Gerber files
     1. Run OctoDesign_v5.m
     2. Run PCBdesign_v1r2.m
     3. Open Cadsoft EAGLE.  Create a new board (File -> New -> Board).
-    4. In the "Board" window, File -> Execute Script.  Choose testMacro.scr in this directory.
+    4. In the "Board" window, File -> Execute Script.  Choose BoardMacro.scr in this directory.
     5. To generate the NSF logo on the PCB, execute the LogoMacroPCB.scr script (File -> Execute Script).
     
     Once Satisfied with the design:

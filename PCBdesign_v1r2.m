@@ -28,7 +28,11 @@ fprintf(fid, 'grid mm finest;\n');
 
 %% Define Board dims
 
-dimsAry = [-PCBwidth/2, -PCBlength/2; PCBwidth/2, PCBlength/2; -PCBwidth/2, -PCBlength/2]';
+dimsAry = [-PCBwidth/2, -PCBlength/2; 
+           -PCBwidth/2, PCBlength/2; 
+           PCBwidth/2, PCBlength/2;
+           PCBwidth/2, -PCBlength/2;
+           -PCBwidth/2, -PCBlength/2;]';
 
 fprintf(fid, 'layer Dimension;\n');
 % DEPRECATED.  New versions of Eagle use 'line'

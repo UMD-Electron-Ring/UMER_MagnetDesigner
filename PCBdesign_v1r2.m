@@ -31,7 +31,9 @@ fprintf(fid, 'grid mm finest;\n');
 dimsAry = [-PCBwidth/2, -PCBlength/2; PCBwidth/2, PCBlength/2; -PCBwidth/2, -PCBlength/2]';
 
 fprintf(fid, 'layer Dimension;\n');
-fprintf(fid, 'wire .2');
+% DEPRECATED.  New versions of Eagle use 'line'
+% fprintf(fid, 'wire .2');
+fprintf(fid, 'line .2');
 fprintf(fid, ' (%f %f)', dimsAry);
 fprintf(fid, ';\n');
 
@@ -59,7 +61,9 @@ for jj=1:2
     fprintf(fid,'layer Top\n');
     for ii=[1,3]
         spiral = iter{ii};
-        fprintf(fid, ['wire ', wireWidth]);
+        % DEPRECATED.  New versions of Eagle use 'line'
+        % fprintf(fid, ['wire ', wireWidth]);
+        fprintf(fid, ['line ', wireWidth]);
         fprintf(fid, ' (%f %f)', spiral);
         fprintf(fid, ';\n');
     end
@@ -67,7 +71,9 @@ for jj=1:2
     fprintf(fid,'layer Bottom\n');
     for ii=[2,4]
         spiral = iter{ii};
-        fprintf(fid, ['wire ', wireWidth]);
+        % DEPRECATED.  New versions of Eagle use 'line'
+        % fprintf(fid, ['wire ', wireWidth]);
+        fprintf(fid, ['line ', wireWidth]);
         fprintf(fid, ' (%f %f)', spiral);
         fprintf(fid, ';\n');
     end

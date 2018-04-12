@@ -26,10 +26,3 @@ To generate Gerber files
 To clean the directory
 
     Run (double-click) cleandir.cmd
-    
-    
-    
-QUESTIONS
-
-David Matthew Jr.
-matt0089@umd.edu

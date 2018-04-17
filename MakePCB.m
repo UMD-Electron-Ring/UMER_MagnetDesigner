@@ -1,5 +1,13 @@
+%%% MakePCB.m
+% Generates a user script for Autodesk EAGLE PCB CAD software.
+
+% Input design parameters in the "Configure" section.
+
+% See README for more details and instructions for use.
+%% Clear Vars
+
+clear;
 %% Configure. USERS CHANGE THIS SECTION FOR GENERATING DESIGNS
-% NOTE: To change the silk screen custom text, look at 
 MacroFilename = 'BoardMacro.scr';
 
 organization = 'UMER Nonlinear Optics';   % For display on silkscreen

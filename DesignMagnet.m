@@ -1,9 +1,9 @@
-%%% OctoDesign
+%%% DesignMagnet.m
+% Generates coordinate data for laying PCB traces.
 
-% Revision History:
-% 
-% v5: Version for producing octupole magnets, design octo_2015a 
+% Input design parameters in the "Configure" section.
 
+% See README for more details and instructions for use.
 %% Clear Vars
 
 clear;
@@ -134,11 +134,15 @@ BotRightSpiral(1,1) = TopLeftSpiral(1,1);
 BotLeftSpiral(1,1) = BotLeftSpiral(1,9);
 
 % Align inside vias (we have to add points here, not replace)
-BotLeftSpiral = horzcat(BotLeftSpiral, [TopLeftSpiral(1,end); BotLeftSpiral(2,end)]);
-TopLeftSpiral = horzcat(TopLeftSpiral, [TopLeftSpiral(1,end); BotLeftSpiral(2,end)]);
+BotLeftSpiral = horzcat(BotLeftSpiral, ...
+                       [TopLeftSpiral(1,end); BotLeftSpiral(2,end)]);
+TopLeftSpiral = horzcat(TopLeftSpiral, ...
+                       [TopLeftSpiral(1,end); BotLeftSpiral(2,end)]);
 
-BotRightSpiral = horzcat(BotRightSpiral, [TopRightSpiral(1,end); BotRightSpiral(2,end)]);
-TopRightSpiral = horzcat(TopRightSpiral, [TopRightSpiral(1,end); BotRightSpiral(2,end)]);
+BotRightSpiral = horzcat(BotRightSpiral, ...
+                        [TopRightSpiral(1,end); BotRightSpiral(2,end)]);
+TopRightSpiral = horzcat(TopRightSpiral, ...
+                        [TopRightSpiral(1,end); BotRightSpiral(2,end)]);
 
 
 %               *Terminals*
@@ -147,8 +151,10 @@ TopRightSpiral = horzcat(TopRightSpiral, [TopRightSpiral(1,end); BotRightSpiral(
 % BotLeft
 BotLeftSpiral = horzcat([BotLeftSpiral(1,1); -(L/2)], BotLeftSpiral);
 
-% TopRight Outside via align with BotLeft -- DONT MODIFY (it's the above reflected over x axis)
-TopRightSpiral = horzcat([-BotLeftSpiral(1,1); BotLeftSpiral(2,1)], TopRightSpiral);
+% TopRight Outside via align with BotLeft
+% DONT MODIFY (it's the above reflected over x axis)
+TopRightSpiral = horzcat([-BotLeftSpiral(1,1); BotLeftSpiral(2,1)], ...
+                           TopRightSpiral);
 
 
 %               *Diagnostic graphs*
@@ -157,11 +163,19 @@ TopRightSpiral = horzcat([-BotLeftSpiral(1,1); BotLeftSpiral(2,1)], TopRightSpir
 % 
 % figure;
 % hold on;
-% plot3(TopRightSpiral(1,:),TopRightSpiral(2,:),spacing*ones(length(TopRightSpiral)));
-% plot3(TopLeftSpiral(1,:),TopLeftSpiral(2,:),spacing*ones(length(TopLeftSpiral)));
+% plot3(TopRightSpiral(1,:), ...
+%       TopRightSpiral(2,:), ...
+%       spacing*ones(length(TopRightSpiral)));
+% plot3(TopLeftSpiral(1,:), ...
+%       TopLeftSpiral(2,:), ...
+%       spacing*ones(length(TopLeftSpiral)));
 % 
-% plot3(BotRightSpiral(1,:),BotRightSpiral(2,:),-spacing*ones(length(BotRightSpiral)));
-% plot3(BotLeftSpiral(1,:),BotLeftSpiral(2,:),-spacing*ones(length(BotLeftSpiral)));
+% plot3(BotRightSpiral(1,:), ...
+%       BotRightSpiral(2,:), ...
+%       -spacing*ones(length(BotRightSpiral)));
+% plot3(BotLeftSpiral(1,:), ...
+%       BotLeftSpiral(2,:), ...
+%       -spacing*ones(length(BotLeftSpiral)));
 % hold off;
 
 
@@ -170,7 +184,10 @@ TopRightSpiral = horzcat([-BotLeftSpiral(1,1); BotLeftSpiral(2,1)], TopRightSpir
 % flip BotSpirals - they iterate in opposite direction
 % This doesn't seem to be useful for printed circuit data, but it
 % may be helpful for generating 3D cylindrical data for simulation.
-PCB = {TopRightSpiral, flip(BotRightSpiral,2), TopLeftSpiral, flip(BotLeftSpiral,2)};
+PCB = {TopRightSpiral, ...
+       flip(BotRightSpiral,2), ...
+       TopLeftSpiral, ...
+       flip(BotLeftSpiral,2)};
    
 
 %% Export Data for PCB design

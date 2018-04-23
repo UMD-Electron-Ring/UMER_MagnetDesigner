@@ -8,7 +8,9 @@ for %%i in (*) do (
                         if not %%i == LogoMacroPCB.scr (
                             if not %%i == README.txt (
                                 if not %%i == .gitignore (
-                                    del %%i
+				    if not %%~xi == .png (
+                                        del %%i
+			            )
                                 )
                             )
                         )

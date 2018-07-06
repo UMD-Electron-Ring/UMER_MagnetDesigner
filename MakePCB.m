@@ -11,11 +11,12 @@ clear;
 MacroFilename = 'BoardMacro.scr';
 
 organization = 'UMER Nonlinear Optics';   % For display on silkscreen
-designNumber = 'Octo_2015a';              % For display on silkscreen
+designNumber = 'Sextu_2018a';              % For display on silkscreen
 
 PCBlength = 79.45-20.55; % mm
 PCBwidth  = 146.1-53.9;
 wireWidth = '.8';
+poles = 4;
 
 viaAp  = '.6';             % via aperture      (drill size)          mm
 termAp = '1.1';            % terminal aperture (drill size)          mm
@@ -26,6 +27,7 @@ termD = '2.8';             % terminal diameter (aperture + plating)  mm
 % EVERYTHING BELOW USERS NEED NOT CHANGE
 %% Load Data
 
+n = poles/2;
 RawData = load('PCBdata');
 RawData = RawData.PCB;
 % Open macro file to write
@@ -43,18 +45,16 @@ dimsAry = [-PCBwidth/2, -PCBlength/2;
            -PCBwidth/2, -PCBlength/2;]';
 
 fprintf(fid, 'layer Dimension;\n');
-% DEPRECATED.  New versions of Eagle use 'line'
-% fprintf(fid, 'wire .2');
 fprintf(fid, 'line .2');
 fprintf(fid, ' (%f %f)', dimsAry);
 fprintf(fid, ';\n');
 
 %% top and bottom wire layers
 
-Lefts = {[],[],[],[]};
-Rights = {[],[],[],[]};
+Lefts = cell(n);
+Rights = cell(n);
 
-for ii=1:4
+for ii=1:n
     LeftSpiral = RawData{ii};
     RightSpiral = RawData{ii};
     
@@ -68,41 +68,36 @@ end
 all = {Lefts, Rights};
 
 for jj=1:2
+
     iter = all{jj};
-    
     fprintf(fid,'layer Top\n');
-    for ii=[1,3]
+    for ii=(2*(1:ceil(n/2))-1)
         spiral = iter{ii};
-        % DEPRECATED.  New versions of Eagle use 'line'
-        % fprintf(fid, ['wire ', wireWidth]);
         fprintf(fid, ['line ', wireWidth]);
         fprintf(fid, ' (%f %f)', spiral);
         fprintf(fid, ';\n');
     end
 
     fprintf(fid,'layer Bottom\n');
-    for ii=[2,4]
+    for ii=(2*(1:floor(n/2)))
         spiral = iter{ii};
-        % DEPRECATED.  New versions of Eagle use 'line'
-        % fprintf(fid, ['wire ', wireWidth]);
         fprintf(fid, ['line ', wireWidth]);
         fprintf(fid, ' (%f %f)', spiral);
         fprintf(fid, ';\n');
-    end
-    
+    end    
 end
 
 %%  Make vias and terminals
 
 % via locations (last indices of first 3 spirals)
 viaLs = [];
-for ii=1:3
+for ii=1:(n-1)
     viaLs = [viaLs Lefts{ii}(:,end)];
     viaLs = [viaLs Rights{ii}(:,end)];
 end
 
 % terminal locations (first idx of first spiral, last idx of last spiral)
-termLs = [Lefts{1}(:,1) Lefts{4}(:,end) Rights{1}(:,1) Rights{4}(:,end)];
+termLs = [Lefts{1}(:,1) Lefts{n}(:,end) Rights{1}(:,1) Rights{n}(:,end)];
 
 
 fprintf(fid, ['change drill ' viaAp ';\n']);

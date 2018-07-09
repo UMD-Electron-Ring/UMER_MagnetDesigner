@@ -1,4 +1,5 @@
 *.asv
 *.mat
-BoardMacro.scr
+*.scr
 PCBdata
+octave-workspace

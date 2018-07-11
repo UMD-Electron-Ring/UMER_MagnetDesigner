@@ -1,5 +1,6 @@
 import xml.etree.ElementTree
 import math
+import numpy as np
 
 # MagLi reference frame: y is up, x is across, z is down the tube
 # Eagle reference frame: x is across, y is up
@@ -51,7 +52,7 @@ class Wire:
 
 
 def read_brd(filename):
-    """
+    """poly.polyfit(x, y, degree, full=True)
     Reads in a .brd file from Autodesk Eagle and turns it into a list of Wires. Tested with Eagle 9.1.0.
     :param filename: The name of the file to read from.
     :return: A list of wires representing all the wires in the brd file.
@@ -124,27 +125,25 @@ def arc(center_z, radius, start_angle, end_angle, x_rot, y_rot, z_rot, segments,
     :param current: The current flowing through the wire.
     :return: A string representing the arc as a MagLi command.
     """
-    return "arc(0, 0, 0, {0:.5f}, {1:.5f}, {2:.5f}, {3:.5f}, {4:.5f}, {5:.5f}, {6:.5f}, {7:.5f}, {8:.5f});\n".format(
-        center_z / 1000., x_rot, y_rot, z_rot, start_angle, end_angle, radius / 1000., segments, current)
+    return "arc(0, 0, 0, {0:.5f}, {1:.5f}, {2:.5f}, {3:.5f}, {4:.5f}, {5:.5f}, {6:.5f}, {7:.5f}, {8:d});\n".format(
+        center_z / 1000., x_rot, y_rot, z_rot, start_angle, end_angle, radius / 1000., current, segments)
 
 
-def line(center_x, center_y, center_z, length, segments, current):
+def line(center_x, center_y, center_z, length, current):
     """
     Convert information about a line of wire to a MagLi command.
     :param center_x: The x coordinate of the center of the line.
     :param center_y: The y coordinate of the center of the line.
     :param center_z: The z coordinate of the center of the line.
     :param length: The length of the wire.
-    :param segments: How many line segments should be used to draw the line.
     :param current: The current flowing through the wire. Positive current flows one way and negative flows the other
     but the manual doesn't say which is which.
     :return: A string representing the line as a MagLi command.
     """
-    return "line(2, {0:.5f}, {1:.5f}, {2:.5f}, 0, 0, 0, {3:.5f}, {4:.5f}, {5:.5f});\n".format(center_x / 1000.,
-                                                                                              center_y / 1000.,
-                                                                                              center_z / 1000.,
-                                                                                              length / 1000., segments,
-                                                                                              current)
+    return "line(2, {0:.5f}, {1:.5f}, {2:.5f}, 0, 0, 0, {3:.5f}, {4:.5f}, 1);\n".format(center_x / 1000.,
+                                                                                        center_y / 1000.,
+                                                                                        center_z / 1000.,
+                                                                                        length / 1000., current)
 
 
 def x_to_angle(angle_reference, radius, x):
@@ -168,7 +167,7 @@ def x_to_xy(angle_reference, radius, x):
     :return: a tuple of the (x, y) coordinate of the point.
     """
     angle = x_to_angle(angle_reference, radius, x)
-    return radius * math.cos(math.radians(angle)), radius * math.sin(math.radians(angle))
+    return abs(radius) * math.cos(math.radians(angle)), abs(radius) * math.sin(math.radians(angle))
 
 
 def write_magli(filename, mode, wires, current, radius, angle_reference, segments):
@@ -197,11 +196,20 @@ def write_magli(filename, mode, wires, current, radius, angle_reference, segment
                 current_mult = -1
             else:
                 current_mult = 1
-            f.write(line(xy[0], xy[1], (wire.y1 + wire.y2) / 2., wire.length(), segments, current_mult * current))
+            f.write(line(xy[0], xy[1], (wire.y1 + wire.y2) / 2., wire.length(), current_mult * current))
     f.write(arcs)
     f.close()
 
 
-write_magli("out.spc", "w", read_scr("BoardMacroLeft.scr"), 2, 30, (0, 270), -100)
-write_magli("out.spc", "a", read_scr("BoardMacroRight.scr"), 2, 30, (0, 90), -100)
+def batch_scr_to_magli(in_path_prefix, out_path_prefix, min_a, max_a, step, current, radius, segments):
+    for a in np.arange(min_a, max_a+step, step):
+        a_str = "{0:g}".format(a)
+        write_magli(out_path_prefix + a_str + ".spc", "w", read_scr(in_path_prefix + a_str + ".scr"), current, radius,
+                    (0, 90), segments)
+        write_magli(out_path_prefix + a_str + ".spc", "a", read_scr(in_path_prefix + a_str + ".scr"), current,
+                    -radius, (0, 90), segments)
 
+
+# batch_scr_to_magli("./BoardMacros/BoardMacroLeft_", "./Specifications/DoubleLeft_", 0.9, 1, 0.001, 2, 30, 40)
+# write_magli("outL.spc", "w", read_scr("BoardMacroLeft.scr"), 2, 30, (0, 90), 20)
+# write_magli("outL.spc", "a", read_scr("BoardMacroLeft.scr"), 2, -30, (0, 270), 20)

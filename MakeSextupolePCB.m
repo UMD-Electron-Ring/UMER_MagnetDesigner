@@ -5,20 +5,20 @@
 
 % See README for more details and instructions for use.
 
-function MacroFilename = MakeSextupolePCB(isLeft)
+function MacroFilename = MakeSextupolePCB(isLeft, a)
   %% Configure. USERS CHANGE THIS SECTION FOR GENERATING DESIGNS
   organization = 'UMER Nonlinear Optics';   % For display on silkscreen
   
   if isLeft
     designNumber = 'Sextu_2018_left';              % For display on silkscreen
-    MacroFilename = 'BoardMacroLeft.scr';
+    MacroFilename = strcat('./BoardMacros/BoardMacroLeft_',num2str(a),'.scr');
   else
     designNumber = 'Sextu_2018_right';
-    MacroFilename = 'BoardMacroRight.scr';
+    MacroFilename = strcat('./BoardMacros/BoardMacroRight_',num2str(a),'.scr');
   end
 
   PCBlength = 79.45-20.55; % mm
-  PCBwidth  = 146.1-53.9;
+  PCBwidth  = 30*pi;
   wireWidth = '.8';
   poles = 6;
 
@@ -31,7 +31,7 @@ function MacroFilename = MakeSextupolePCB(isLeft)
   % EVERYTHING BELOW USERS NEED NOT CHANGE
   %% Load Data
 
-  RawData = load('PCBdata');
+  RawData = load(strcat('./PCBData/PCBdata_',num2str(a)));
   RawData = RawData.PCB;
   % Open macro file to write
   fid = fopen(MacroFilename,'w');

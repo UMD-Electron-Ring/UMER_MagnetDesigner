@@ -1,5 +1,12 @@
 *.asv
 *.mat
 *.scr
+!LogoMacroPCB.scr
 PCBdata
 octave-workspace
+.idea/
+PCBData/
+BoardMacros/
+Specifications/
+__pycache__/
+magli output/

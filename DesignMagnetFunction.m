@@ -8,10 +8,10 @@
 function PCBfilename = DesignMagnetFunction(a)
   %% Configure. USERS CHANGE THIS SECTION FOR GENERATING DESIGNS
 
-  PCBfilename = 'PCBdata';
+  PCBfilename = strcat('./PCBData/PCBdata_',num2str(a));
 
   L = 46.5;  % Length of magnet
-  HousingRadius = 29.35;   % 29.35 I calculated this as 29.329 mm (from pcb width)
+  HousingRadius = 30;   % 29.35 I calculated this as 29.329 mm (from pcb width)
   Multipole = 6;  % Octupole
   spirals = 13;
 

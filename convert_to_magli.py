@@ -210,6 +210,14 @@ def batch_scr_to_magli(in_path_prefix, out_path_prefix, min_a, max_a, step, curr
                     -radius, (0, 270), segments)
 
 
+def batch_scr_to_magli_assym(in_left_prefix, in_right_prefix, out_path_prefix, min_a, max_a, step, current, radius, segments):
+    for a in np.arange(min_a, max_a+step, step):
+        a_str = "{0:g}".format(a)
+        write_magli(out_path_prefix + a_str + ".spc", "w", read_scr(in_left_prefix + a_str + ".scr"), current, radius,
+                    (0, 90), segments)
+        write_magli(out_path_prefix + a_str + ".spc", "a", read_scr(in_right_prefix + a_str + ".scr"), current,
+                    radius, (0, 270), segments)
+
 # batch_scr_to_magli("./BoardMacros/BoardMacroLeft_", "./Specifications/DoubleLeft_", 0.9, 1, 0.001, 2, 30, 40)
 # write_magli("outL.spc", "w", read_scr("BoardMacroLeft.scr"), 2, 30, (0, 90), 20)
 # write_magli("outL.spc", "a", read_scr("BoardMacroLeft.scr"), 2, -30, (0, 270), 20)

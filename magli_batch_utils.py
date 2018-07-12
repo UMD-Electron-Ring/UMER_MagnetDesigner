@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import matplotlib.pyplot as plt
@@ -56,10 +58,12 @@ def read_batch_output(filename):
 
 
 def find_most_nth_poly(in_file_prefix, degree, axis, min_a, max_a, step):
-    a_to_error = {}
-    min_error_a = -1
-    min_error = float("inf")
+    a_to_r_squared = {}
+    a_to_strength = {}
+    max_r_squared_a = -1
+    max_strength_a = -1
     for a in np.arange(min_a, max_a + step, step):
+        a = round(a, -round(math.log(step, 10)))
         a_str = "{0:g}".format(a)
         data = read_batch_output(in_file_prefix + a_str + ".txt")
         x = []
@@ -67,23 +71,30 @@ def find_most_nth_poly(in_file_prefix, degree, axis, min_a, max_a, step):
         for line in data:
             x.append(line[X_AXIS_MAP.get(axis)])
             y.append(line[Y_AXIS_MAP.get(axis)])
-        # if a == 1 or a == 0.92:
-        #     poly_function = poly.polyval(x, poly.polyfit(x, y, degree))
-        #     plt.plot(x, y, "r.")
-        #     plt.plot(x, poly_function)
-        #     plt.ylabel("By")
-        #     plt.xlabel("X (m)")
-        #     plt.title("a = "+str(a))
-        #     plt.show()
-        error = poly.polyfit(x, y, degree, full=True)[1][0][0]
-        a_to_error[a] = error
-        if error < min_error:
-            min_error = error
-            min_error_a = a
-    print("Minimum error was "+str(min_error)+" at a = "+str(min_error_a))
-    plt.plot(a_to_error.keys(), a_to_error.values())
+        x = np.array(x)
+        y = np.array(y)
+        poly_fit = poly.polyfit(x, y, degree, full=True)
+        poly_function = poly.polyval(x, poly.polyfit(x, y, degree))
+        a_to_r_squared[a] = 1 - (poly_fit[1][0][0] / sum(poly_function**2))
+        a_to_strength[a] = poly_fit[0][2] * 2.0
+        if a / 0.1 == int(a / 0.1):
+            plt.plot(x, y, "r.")
+            plt.plot(x, poly_function)
+            plt.ylabel("By")
+            plt.xlabel("X (m)")
+            plt.title("a = "+str(a))
+            plt.show()
+        if max_r_squared_a == -1 or a_to_r_squared[a] > a_to_r_squared[max_r_squared_a]:
+            max_r_squared_a = a
+        if max_strength_a == -1 or abs(a_to_strength[a]) > abs(a_to_strength[max_strength_a]):
+            max_strength_a = a
+    print("Maximum R^2 was "+str(a_to_r_squared[max_r_squared_a])+" at a = "+str(max_r_squared_a))
+    print("Maximum strength was "+str(a_to_strength[max_strength_a])+" at a = "+str(max_strength_a))
+    plt.plot(a_to_r_squared.keys(), a_to_r_squared.values())
     plt.show()
-    return a_to_error
+    plt.plot(a_to_strength.keys(), a_to_strength.values())
+    plt.show()
+    return a_to_r_squared
 
 
 # make_batch_file("DoubleLeft_", "/home/noah/Documents/UMER_MagnetDesigner/Specifications/batch_", 0.9, 1., 0.001,

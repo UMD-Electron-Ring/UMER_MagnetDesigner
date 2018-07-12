@@ -183,20 +183,20 @@ def write_magli(filename, mode, wires, current, radius, angle_reference, segment
     """
     f = open(filename, mode)
     arcs = ""
+    lines = ""
     for wire in wires:
         if wire.is_arc() and wire.y1 == wire.y2:
             wire_rad = radius - wire.zFromBack
             arcs += arc(wire.y1, wire_rad, x_to_angle(angle_reference, wire_rad, wire.x1),
                         x_to_angle(angle_reference, wire_rad, wire.x2), 0, 0, 0, segments, current)
-        elif wire.is_arc():
-            print("Complicated arc: " + str(wire))
-        else:
+        elif not wire.is_arc():
             xy = x_to_xy(angle_reference, radius - wire.zFromBack, wire.x1)
             if wire.y1 > wire.y2:
                 current_mult = -1
             else:
                 current_mult = 1
-            f.write(line(xy[0], xy[1], (wire.y1 + wire.y2) / 2., wire.length(), current_mult * current))
+            lines += line(xy[0], xy[1], (wire.y1 + wire.y2) / 2., wire.length(), current_mult * current)
+    f.write(lines)
     f.write(arcs)
     f.close()
 
@@ -207,7 +207,7 @@ def batch_scr_to_magli(in_path_prefix, out_path_prefix, min_a, max_a, step, curr
         write_magli(out_path_prefix + a_str + ".spc", "w", read_scr(in_path_prefix + a_str + ".scr"), current, radius,
                     (0, 90), segments)
         write_magli(out_path_prefix + a_str + ".spc", "a", read_scr(in_path_prefix + a_str + ".scr"), current,
-                    -radius, (0, 90), segments)
+                    -radius, (0, 270), segments)
 
 
 # batch_scr_to_magli("./BoardMacros/BoardMacroLeft_", "./Specifications/DoubleLeft_", 0.9, 1, 0.001, 2, 30, 40)

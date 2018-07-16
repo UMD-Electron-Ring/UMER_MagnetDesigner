@@ -90,6 +90,7 @@ def find_most_nth_poly(in_file_prefix, degree, axis, min_a, max_a, step):
             max_strength_a = a
     print("Maximum R^2 was "+str(a_to_r_squared[max_r_squared_a])+" at a = "+str(max_r_squared_a))
     print("Maximum strength was "+str(a_to_strength[max_strength_a])+" at a = "+str(max_strength_a))
+    print("Maximum kk was "+str(a_to_strength[max_strength_a] / 0.00033887))
     plt.plot(a_to_r_squared.keys(), a_to_r_squared.values())
     plt.show()
     plt.plot(a_to_strength.keys(), a_to_strength.values())

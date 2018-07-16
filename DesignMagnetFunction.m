@@ -5,20 +5,17 @@
 
 % See README for more details and instructions for use.
 
-function PCBfilename = DesignMagnetFunction(a)
+function PCBfilename = DesignMagnetFunction(a, radius)
   %% Configure. USERS CHANGE THIS SECTION FOR GENERATING DESIGNS
 
   PCBfilename = strcat('./PCBData/PCBdata_',num2str(a));
 
   L = 46.5;  % Length of magnet
-  HousingRadius = 30;   % 29.35 I calculated this as 29.329 mm (from pcb width)
-  Multipole = 6;  % Octupole
+  Multipole = 6;  % Sextupole
   spirals = 13;
 
   % EVERYTHING BELOW USERS NEED NOT CHANGE
   %% Initialize vars
-
-  R = HousingRadius;
   N = spirals*2+2;
   dz = L/N;
   n = Multipole/2;  % coefficent for multipole expansion
@@ -83,9 +80,9 @@ function PCBfilename = DesignMagnetFunction(a)
   % and Z corresponds to the "y" axis
 
   % Top
-  TopRightSpiral = [R*FTopSpiral(spiralIdx); ZTopSpiral(spiralIdx)];
+  TopRightSpiral = [radius*FTopSpiral(spiralIdx); ZTopSpiral(spiralIdx)];
   % Bottom
-  BotRightSpiral = [R*FBotSpiral(spiralIdx); ZBotSpiral(spiralIdx)];
+  BotRightSpiral = [radius*FBotSpiral(spiralIdx); ZBotSpiral(spiralIdx)];
 
   %% Make rotated/reflected models of spiral
 

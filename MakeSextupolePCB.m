@@ -5,7 +5,7 @@
 
 % See README for more details and instructions for use.
 
-function MacroFilename = MakeSextupolePCB(isLeft, a)
+function MacroFilename = MakeSextupolePCB(isLeft, a, radius)
   %% Configure. USERS CHANGE THIS SECTION FOR GENERATING DESIGNS
   organization = 'UMER Nonlinear Optics';   % For display on silkscreen
   
@@ -18,7 +18,7 @@ function MacroFilename = MakeSextupolePCB(isLeft, a)
   end
 
   PCBlength = 79.45-20.55; % mm
-  PCBwidth  = 30*pi;
+  PCBwidth  = radius*pi;
   wireWidth = '.8';
   poles = 6;
 

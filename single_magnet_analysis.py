@@ -72,13 +72,15 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
         f.write("load(" + in_file + ",);\n")
         for y in np.arange(-radius, radius, grid_square_length):
             y = round(y, 6)
-            x_lim = abs(radius * np.math.sin(np.math.acos(y / radius)))
+            start_x = abs(radius * np.math.sin(np.math.acos(y / radius)))
+            # Round down to the nearest multiple of grid square length
+            start_x = start_x - start_x % grid_square_length
             # calc(rectangular coordinate system is 0, varying along an axis (2 for z, 0 for x, 1 for y),
             # starting point x,
             # starting point y, starting point z, step size, # steps,, name of output tile.txt);
-            f.write("calc(0, 0, {0:f}, {1:f}, {2:f}, {3:f}, {4:f},, along_x_y={1:f}.txt);\n".format(-x_lim, y, z,
+            f.write("calc(0, 0, {0:f}, {1:f}, {2:f}, {3:f}, {4:f},, along_x_y={1:f}.txt);\n".format(-start_x, y, z,
                                                                                                     grid_square_length,
-                                                                                                    2. * x_lim /
+                                                                                                    2. * start_x /
                                                                                                     grid_square_length))
     process = subprocess.Popen("./mag -bat batch.bat".split(), stdout=subprocess.PIPE, cwd=out_file_folder)
     output, error = process.communicate()
@@ -99,7 +101,7 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
         plt.xlabel("X (meters)")
         plt.ylabel("Y (meters)")
         plt.title("B-field inside "+in_file+" at Z="+str(z))
-        plt.quiver(x, y, Bx, By, pivot="mid")
+        plt.quiver(x, y, Bx, By, pivot="mid", scale=0.005, scale_units="width")
         plt.savefig("B-field inside "+in_file+" at Z="+str(z)+".png")
         plt.show()
         plt.xlabel("X (meters)")
@@ -109,16 +111,23 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
         plt.savefig("Forces on an electron into "+in_file+" at Z="+str(z)+".png")
         plt.show()
     if force:
-        return x, y, Bx, By
-    else:
         return x, y, -By, Bx
+    else:
+        return x, y, Bx, By
 
 
 def field_animation(in_file, out_file_folder, start_z, end_z, steps, radius, grid_square_length, fps, force=False):
     x, y, u, v = field_plot(in_file, out_file_folder, 0, radius, grid_square_length, force=force, draw=False)
-    fig = plt.figure(figsize=(24, 18))
-    ax = plt.axes(xlim=(min(x), max(x)), ylim=(min(y), max(y)))
-    quiver = ax.quiver(x, y, u, v, pivot='mid')
+    fig = plt.figure(figsize=(16, 12))
+    axes = plt.axes(xlim=(-radius * 1.1, radius * 1.1), ylim=(-radius * 1.1, radius * 1.1))
+    if force:
+        axes.set_title("Forces on electron into "+in_file+" from Z="+str(start_z)+" to Z="+str(end_z))
+    else:
+        axes.set_title("B-field of " + in_file + " from Z=" + str(start_z) + " to Z=" + str(end_z))
+    axes.set_xlabel("X (meters)")
+    axes.set_ylabel("Y (meters)")
+    quiver = axes.quiver(x, y, u, v, pivot='tail', scale=0.005, scale_units="width")
+    axes.scatter(x, y)
 
     def update_quiver(z):
         _, _, new_u, new_v = field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=force, draw=False)
@@ -133,8 +142,9 @@ def field_animation(in_file, out_file_folder, start_z, end_z, steps, radius, gri
     plt.show()
 
 
-# field_animation("LeftRight_0.97.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.05, 0.05, 30, 0.015, 0.001, 30, force=False)
-field_plot("LeftRight_0.97.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", 0.0, 0.015, 0.001)
+# field_animation("LeftRight_0.97.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.05, 0.05, 300, 0.015, 0.001, 30, force=False)
+field_animation("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.1, 0.1, 600, 0.015, 0.001, 30, force=False)
+# field_plot("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", 0.0, 0.015, 0.001)
 # print(
 #     strength_along_z("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.09, -0.0188, 75,
 # 0.01,

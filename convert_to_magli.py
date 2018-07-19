@@ -201,23 +201,52 @@ def write_magli(filename, mode, wires, current, radius, angle_reference, segment
     f.close()
 
 
-def batch_scr_to_magli(in_path_prefix, out_path_prefix, min_a, max_a, step, current, radius, segments):
-    for a in np.arange(min_a, max_a+step, step):
+def batch_scr_to_magli(in_file_prefix, out_file_prefix, min_a, max_a, step, current, radius, segments):
+    """
+    Convert any number of .scr files to magli .spc files by wrapping the scr file around a cylinder, with the bottom
+    semicylinder being one wrapping and the top being a mirror image. The scr filename must end with "a.scr" where a
+    is a number.
+    :param in_file_prefix: The prefix of where all the .scr files are. This should include the filename up to a,
+    complete with filepath.
+    :param out_file_prefix: The prefix of where all the .spc files should be output to. This should include the
+    filename up to a, complete with filepath.
+    :param min_a: The minimum value of a.
+    :param max_a: The maximum value of a.
+    :param step: How much to change a by to get from one file to the next.
+    :param current: The current going through the wires.
+    :param radius: The radius of the cylinder the wires are being wrapped around.
+    :param segments: How many line segments should be used to represent each wire.
+    """
+    for a in np.arange(min_a, max_a + step, step):
         a_str = "{0:g}".format(a)
-        write_magli(out_path_prefix + a_str + ".spc", "w", read_scr(in_path_prefix + a_str + ".scr"), current, radius,
+        write_magli(out_file_prefix + a_str + ".spc", "w", read_scr(in_file_prefix + a_str + ".scr"), current, radius,
                     (0, 90), segments)
-        write_magli(out_path_prefix + a_str + ".spc", "a", read_scr(in_path_prefix + a_str + ".scr"), current,
-                    -radius, (0, 270), segments)
+        write_magli(out_file_prefix + a_str + ".spc", "a", read_scr(in_file_prefix + a_str + ".scr"), current, -radius,
+                    (0, 270), segments)
 
 
-def batch_scr_to_magli_assym(in_left_prefix, in_right_prefix, out_path_prefix, min_a, max_a, step, current, radius, segments):
-    for a in np.arange(min_a, max_a+step, step):
+def batch_scr_to_magli_asymmetric(in_top_prefix, in_bottom_prefix, out_file_prefix, min_a, max_a, step, current, radius,
+                                  segments):
+    """
+    Convert any number of pairs of .scr files to magli .spc files by wrapping the scr files around a cylinder,
+    with the bottom semicylinder being one scr and the top being the other. The scr filenames must end with "a.scr"
+    where a is a number.
+    :param in_top_prefix: The prefix of where all the .scr files for the top semicylinder are. This should include
+    the filename up to a, complete with filepath.
+    :param in_bottom_prefix: The prefix of where all the .scr files for the bottom semicylinder are. This should
+    include the filename up to a, complete with filepath.
+    :param out_file_prefix: The prefix of where all the .spc files should be output to. This should include the
+    filename up to a, complete with filepath.
+    :param min_a: The minimum value of a.
+    :param max_a: The maximum value of a.
+    :param step: How much to change a by to get from one file to the next.
+    :param current: The current going through the wires.
+    :param radius: The radius of the cylinder the wires are being wrapped around.
+    :param segments: How many line segments should be used to represent each wire.
+    """
+    for a in np.arange(min_a, max_a + step, step):
         a_str = "{0:g}".format(a)
-        write_magli(out_path_prefix + a_str + ".spc", "w", read_scr(in_left_prefix + a_str + ".scr"), current, radius,
+        write_magli(out_file_prefix + a_str + ".spc", "w", read_scr(in_top_prefix + a_str + ".scr"), current, radius,
                     (0, 90), segments)
-        write_magli(out_path_prefix + a_str + ".spc", "a", read_scr(in_right_prefix + a_str + ".scr"), current,
-                    radius, (0, 270), segments)
-
-# batch_scr_to_magli("./BoardMacros/BoardMacroLeft_", "./Specifications/DoubleLeft_", 0.9, 1, 0.001, 2, 30, 40)
-# write_magli("outL.spc", "w", read_scr("BoardMacroLeft.scr"), 2, 30, (0, 90), 20)
-# write_magli("outL.spc", "a", read_scr("BoardMacroLeft.scr"), 2, -30, (0, 270), 20)
+        write_magli(out_file_prefix + a_str + ".spc", "a", read_scr(in_bottom_prefix + a_str + ".scr"), current, radius,
+                    (0, 270), segments)

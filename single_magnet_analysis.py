@@ -1,23 +1,30 @@
 import subprocess
-
 import numpy as np
-
 import numpy.polynomial.polynomial as poly
-
 from magli_batch_utils import read_batch_output
-
 from matplotlib import pyplot as plt
-
 from matplotlib import animation
 
 
 def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, along_x):
-    z_step = (end_z - start_z) / steps
+    """
+    Measure how the sextupole strength of a magnet varies with respect to z.
+    :param in_file: The .spc file representing the magner
+    :param out_file_folder: The folder to save the output files in.
+    :param start_z: The starting value of z.
+    :param end_z: The final value of z.
+    :param steps: How many values z should take on between the starting and final values.
+    :param radius: The radius to measure strength within. Should be less than the actual radius to avoid weirdness.
+    :param along_x: Whether to measure strength along x or along y.
+    :return: a dictionary mapping z-coordinate to sextupole strength.
+    """
+    # We want 1000 steps total, across the diameter.
     r_step = radius * 2. / 1000.
     z_to_strength = {}
     with open(out_file_folder + "/batch.bat", "w") as f:
         f.write("load(" + in_file + ",);\n")
-        for z in np.arange(start_z, end_z + z_step, z_step):
+        for z in np.linspace(start_z, end_z, steps):
+            # Round to avoid floating point errors
             z = round(z, 6)
             # calc(rectangular coordinate system is 0, varying along an axis (2 for z, 0 for x, 1 for y),
             # starting point x,
@@ -26,11 +33,13 @@ def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, al
                 f.write("calc(0, 0, {0:f}, 0, {1:f}, {2:f}, 1000,, along_x_z={1:f}.txt);\n".format(-radius, z, r_step))
             else:
                 f.write("calc(0, 1, 0, {0:f}, {1:f}, {2:f}, 1000,, along_y_z={1:f}.txt);\n".format(-radius, z, r_step))
+    # Run the batch file
     process = subprocess.Popen("./mag -bat batch.bat".split(), stdout=subprocess.PIPE, cwd=out_file_folder)
     output, error = process.communicate()
     print(output)
     print(error)
-    for z in np.arange(start_z, end_z + z_step, z_step):
+    for z in np.linspace(start_z, end_z, steps):
+        # Round to avoid floating point errors
         z = round(z, 6)
         if along_x:
             data = read_batch_output(out_file_folder + "/along_x_z={0:f}.txt".format(z))
@@ -48,30 +57,51 @@ def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, al
         By = np.array(By)
         poly_fit = poly.polyfit(r, By, 2)
         z_to_strength[z] = poly_fit[2] * 2.0
+    # Plot the strength along z.
     plt.plot(z_to_strength.keys(), z_to_strength.values())
+    # Plot the edges of the dipole magnet
     plt.vlines(0.02113, min(z_to_strength.values()), max(z_to_strength.values()), colors="tab:orange",
                linestyles="dashed")
     plt.vlines(-0.02113, min(z_to_strength.values()), max(z_to_strength.values()), colors="tab:orange",
                linestyles="dashed")
+    # Plot y = 0
     plt.hlines(0, start_z, end_z, linestyles="dashed")
     plt.xlabel("Z (meters)")
     plt.ylabel("Sextupole Strength (T/(m^2))")
-    plt.title("Strength of "+in_file+" with radius "+str(radius))
+    if along_x:
+        plt.title("Strength of " + in_file + " along x with radius " + str(radius))
+    else:
+        plt.title("Strength of " + in_file + " along y with radius " + str(radius))
     plt.show()
+    # Print useful numbers
     print("Integral: " + str(
         (sum(z_to_strength.values()) * (end_z - start_z) / len(z_to_strength.values()))) + " Tesla per meter")
     print("Min: " + str(min(z_to_strength.values())) + " Tesla per square meter")
     print("Max: " + str(max(z_to_strength.values())) + " Tesla per square meter")
+    # This assumes a 10 KeV electron.
     print("Min: " + str(min(z_to_strength.values()) / 0.00033887) + " inverse cubic meters")
     print("Max: " + str(max(z_to_strength.values()) / 0.00033887) + " inverse cubic meters")
     return z_to_strength
 
 
 def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=False, draw=True):
+    """
+    Create a vector field plot of the magnetic or force field inside a magnet at a given z.
+    :param in_file: The .spc file describing the magnet.
+    :param out_file_folder: The folder to place output files in.
+    :param z: The z value to display the field at.
+    :param radius: The radius to measure field within. Should be less than the actual radius to avoid weirdness.
+    :param grid_square_length: How far apart each vector's tail should be, in meters.
+    :param force: Whether to return the values for the force plot or the magnetic field plot.
+    :param draw: Whether to draw the created plot.
+    :return: Four lists: x, y, vector x components, and vector y components.
+    """
     with open(out_file_folder + "/batch.bat", "w") as f:
         f.write("load(" + in_file + ",);\n")
         for y in np.arange(-radius, radius, grid_square_length):
+            # Avoid floating point errors
             y = round(y, 6)
+            # Find the point on the circle at the given y using trig
             start_x = abs(radius * np.math.sin(np.math.acos(y / radius)))
             # Round down to the nearest multiple of grid square length
             start_x = start_x - start_x % grid_square_length
@@ -89,6 +119,7 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
     Bx = []
     By = []
     for file_y in np.arange(-radius, radius, grid_square_length):
+        # Avoid floating point errors
         file_y = round(file_y, 6)
         data = read_batch_output(out_file_folder + "/along_x_y={0:f}.txt".format(file_y))
         for line in data:
@@ -96,19 +127,21 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
             y.append(line[1])
             Bx.append(line[3])
             By.append(line[4])
+    # Convert By to an array so we can make it negative for the force field
     By = np.array(By)
     if draw:
         plt.xlabel("X (meters)")
         plt.ylabel("Y (meters)")
-        plt.title("B-field inside "+in_file+" at Z="+str(z))
+        plt.title("B-field inside " + in_file + " at Z=" + str(z))
+        # This scale factor may have to be changed for other magnets
         plt.quiver(x, y, Bx, By, pivot="mid", scale=0.005, scale_units="width")
-        plt.savefig("B-field inside "+in_file+" at Z="+str(z)+".png")
+        plt.savefig("B-field inside " + in_file + " at Z=" + str(z) + ".png")
         plt.show()
         plt.xlabel("X (meters)")
         plt.ylabel("Y (meters)")
-        plt.title("Forces on an electron into "+in_file+" at Z="+str(z))
+        plt.title("Forces on an electron into " + in_file + " at Z=" + str(z))
         plt.quiver(x, y, -By, Bx, pivot="mid")
-        plt.savefig("Forces on an electron into "+in_file+" at Z="+str(z)+".png")
+        plt.savefig("Forces on an electron into " + in_file + " at Z=" + str(z) + ".png")
         plt.show()
     if force:
         return x, y, -By, Bx
@@ -117,50 +150,48 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
 
 
 def field_animation(in_file, out_file_folder, start_z, end_z, steps, radius, grid_square_length, fps, force=False):
+    """
+    Animate the magnetic or force field of a manget along a range of Z values.
+    :param in_file: The .spc file describing the magnet.
+    :param out_file_folder: The folder to place output files in.
+    :param start_z: The starting value of z.
+    :param end_z: The final value of z.
+    :param steps: How many values z should take on between the starting and final values.
+    :param radius: The radius to measure field within. Should be less than the actual radius to avoid weirdness.
+    :param grid_square_length: How far apart each vector's tail should be, in meters.
+    :param fps: How many frames to display per second.
+    :param force: Whether to return the values for the force plot or the magnetic field plot.
+    :return: The animation created.
+    """
     x, y, u, v = field_plot(in_file, out_file_folder, 0, radius, grid_square_length, force=force, draw=False)
     fig = plt.figure(figsize=(16, 12))
+    # Force a square plot
     axes = plt.axes(xlim=(-radius * 1.1, radius * 1.1), ylim=(-radius * 1.1, radius * 1.1))
     if force:
-        axes.set_title("Forces on electron into "+in_file+" from Z="+str(start_z)+" to Z="+str(end_z))
+        axes.set_title("Forces on electron into " + in_file + " from Z=" + str(start_z) + " to Z=" + str(end_z))
     else:
         axes.set_title("B-field of " + in_file + " from Z=" + str(start_z) + " to Z=" + str(end_z))
     axes.set_xlabel("X (meters)")
     axes.set_ylabel("Y (meters)")
+    # Set a fixed scaling for the whole animation
     quiver = axes.quiver(x, y, u, v, pivot='tail', scale=0.005, scale_units="width")
     axes.scatter(x, y)
 
     def update_quiver(z):
-        _, _, new_u, new_v = field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=force, draw=False)
+        """
+        Modify the quiver plot to be at the given z.
+        :param z: The Z value to draw the quiver plot at
+        :return: The updated quiver plot.
+        """
+        _, _, new_u, new_v = field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=force,
+                                        draw=False)
         quiver.set_UVC(new_u, new_v)
         return quiver
 
-    anim = animation.FuncAnimation(fig, update_quiver, frames=np.linspace(start_z, end_z, steps), interval=1000./fps, blit=False)
+    anim = animation.FuncAnimation(fig, update_quiver, frames=np.linspace(start_z, end_z, steps), interval=1000. / fps,
+                                   blit=False)
     if force:
-        anim.save("Forces on electron into "+in_file+" from Z="+str(start_z)+" to Z="+str(end_z)+".mp4")
+        anim.save("Forces on electron into " + in_file + " from Z=" + str(start_z) + " to Z=" + str(end_z) + ".mp4")
     else:
         anim.save("B-field of " + in_file + " from Z=" + str(start_z) + " to Z=" + str(end_z) + ".mp4")
-    plt.show()
-
-
-# field_animation("LeftRight_0.97.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.05, 0.05, 300, 0.015, 0.001, 30, force=False)
-field_animation("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.1, 0.1, 600, 0.015, 0.001, 30, force=False)
-# field_plot("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", 0.0, 0.015, 0.001)
-# print(
-#     strength_along_z("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.09, -0.0188, 75,
-# 0.01,
-#                      True))
-# print(strength_along_z("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.0188, 0.0188, 75,
-#                        0.01, True))
-# print(strength_along_z("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", 0.0188, 0.09, 75,
-# 0.01,
-#                        True))
-# print(
-#     strength_along_z("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.09, -0.0188, 75,
-# 0.01,
-#                      False))
-# print(strength_along_z("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", -0.0188, 0.0188, 75,
-#                        0.01, False))
-# print(strength_along_z("BDDBLSP.spc", "/home/noah/Documents/UMER_MagnetDesigner/Specifications", 0.0188, 0.09, 75, 0.01,
-#                        False))
-# Integral: -9.659138442762684e-05 Tesla per meter
-# Integral: -0.00014873792219060312 Tesla per meter
+    return anim

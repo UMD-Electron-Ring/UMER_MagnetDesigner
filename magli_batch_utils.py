@@ -42,23 +42,23 @@ def run_tests_batched(in_file_prefix, out_file_prefix, min_a, max_a, step, tests
     folder = "/".join(in_file_prefix.split("/")[:-1])
     command = "#!/bin/bash\n" \
               "cd " + folder + "\n"
-    for a in np.arange(min_a, max_a + step, step):
+    for a in np.arange(min_a, max_a, step):
         a_str = "{0:g}".format(a)
-        with open(folder + out_file_prefix + a_str + ".bat", "w") as f:
-            f.write("load(" + in_file_prefix + a_str + ".spc,);\n")
+        with open(folder + "/" + out_file_prefix + a_str + ".bat", "w") as f:
+            f.write("load(" + in_file_prefix.split("/")[-1] + a_str + ".spc,);\n")
             # Add the a value to the end of each test output filename to avoid overwriting
             for test in tests_prefix:
                 f.write(test + a_str + ".txt);\n")
             # Add each .bat script to the .sh script
             command += "./mag -bat " + out_file_prefix + a_str + ".bat" + "\n"
-    f = open(folder + out_file_prefix + "all.sh", "w")
+    f = open(folder + "/" + out_file_prefix + "all.sh", "w")
     f.write(command)
     f.close()
     # Allow executing as a script
-    process = subprocess.Popen("chmod a+x all.sh".split(), stdout=subprocess.PIPE, cwd=folder)
+    process = subprocess.Popen(("chmod a+x "+out_file_prefix+"all.sh").split(), stdout=subprocess.PIPE, cwd=folder)
     # MagLi batching only allows one .spc file to be loaded per .bat file, so we have to make a Unix script to run
     # the batch file for each .spc.
-    subprocess.call(out_file_prefix + "all.sh")
+    subprocess.call(folder + "/" + out_file_prefix + "all.sh")
 
 
 def read_batch_output(filename):
@@ -100,13 +100,13 @@ def find_most_nth_magnet(in_file_prefix, n_poles, axis, min_a, max_a, step):
     :return: A dictionary mapping each a value to the R^2 of a polynomial fit of the data from that a value.
     """
     # Calculate polynomial degree from number of poles.
-    degree = n_poles / 2. - 1.
+    degree = int(n_poles / 2. - 1.)
     a_to_r_squared = {}
     a_to_strength = {}
     # Placeholder
     max_r_squared_a = -1
     max_strength_a = -1
-    for a in np.arange(min_a, max_a + step, step):
+    for a in np.arange(min_a, max_a, step):
         # Round to avoid floating point errors
         a = round(a, -round(math.log(step, 10)))
         a_str = "{0:g}".format(a)
@@ -135,11 +135,16 @@ def find_most_nth_magnet(in_file_prefix, n_poles, axis, min_a, max_a, step):
             max_strength_a = a
     print("Maximum R^2 was " + str(a_to_r_squared[max_r_squared_a]) + " at a = " + str(max_r_squared_a))
     print("Maximum strength was " + str(a_to_strength[max_strength_a]) + " at a = " + str(max_strength_a))
-    print("Maximum kk was " + str(a_to_strength[max_strength_a] / 0.00033887))
 
     # Plot output
     plt.plot(a_to_r_squared.keys(), a_to_r_squared.values())
+    plt.title("Effect of A on $R^2$ of "+str(degree)+" degree polynomial fit")
+    plt.xlabel("A")
+    plt.ylabel("$R^2$")
     plt.show()
     plt.plot(a_to_strength.keys(), a_to_strength.values())
+    plt.title("Effect of A on "+str(n_poles)+"-pole strength")
+    plt.xlabel("A")
+    plt.ylabel("Strength ($\\frac{T}{m^"+str(degree)+"}$)")
     plt.show()
     return a_to_r_squared

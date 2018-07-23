@@ -246,7 +246,7 @@ def batch_scr_to_magli_asymmetric(in_top_prefix, in_bottom_prefix, out_file_pref
     :param radius: The radius of the cylinder the wires are being wrapped around.
     :param segments: How many line segments should be used to represent each wire.
     """
-    for a in np.arange(min_a, max_a + step, step):
+    for a in np.arange(min_a, max_a, step):
         a_str = "{0:g}".format(a)
         write_magli(out_file_prefix + a_str + ".spc", "w", read_scr(in_top_prefix + a_str + ".scr"), current, radius,
                     (0, 90), segments)

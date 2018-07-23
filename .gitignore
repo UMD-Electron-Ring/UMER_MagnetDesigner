@@ -7,6 +7,6 @@ octave-workspace
 .idea/
 PCBData/
 BoardMacros/
-Specifications/
+Specifications/*
+!Specifications/mag
 __pycache__/
-magli output/

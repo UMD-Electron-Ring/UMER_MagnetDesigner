@@ -9,4 +9,5 @@ PCBData/
 BoardMacros/
 Specifications/*
 !Specifications/mag
+!Specifications/MagLi.exe
 __pycache__/

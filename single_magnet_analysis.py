@@ -4,13 +4,13 @@ import numpy.polynomial.polynomial as poly
 from magli_batch_utils import read_batch_output
 from matplotlib import pyplot as plt
 from matplotlib import animation
+import os
 
 
-def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, along_x, edge_z):
+def strength_along_z(in_file, start_z, end_z, steps, radius, along_x, edge_z):
     """
     Measure how the sextupole strength of a magnet varies with respect to z.
-    :param in_file: The name .spc file representing the magnet. Should NOT include the path.
-    :param out_file_folder: The folder to save the output files in.
+    :param in_file: The name .spc file representing the magnet. Should not include the path.
     :param start_z: The starting value of z.
     :param end_z: The final value of z.
     :param steps: How many values z should take on between the starting and final values.
@@ -23,7 +23,8 @@ def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, al
     r_step = radius * 2. / 1000.
     z_to_strength = {}
     z_to_r_squared = {}
-    with open(out_file_folder + "/batch.bat", "w") as f:
+    folder = "Specifications"
+    with open(os.path.join(folder, "batch.bat"), "w") as f:
         f.write("load(" + in_file + ",);\n")
         for z in np.linspace(start_z, end_z, steps):
             # Round to avoid floating point errors
@@ -36,17 +37,17 @@ def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, al
             else:
                 f.write("calc(0, 1, 0, {0:f}, {1:f}, {2:f}, 1000,, along_y_z={1:f}.txt);\n".format(-radius, z, r_step))
     # Run the batch file
-    process = subprocess.Popen("./mag -bat batch.bat".split(), stdout=subprocess.PIPE, cwd=out_file_folder)
-    output, error = process.communicate()
-    print(output)
-    print(error)
+    if os.name == "posix":
+        process = subprocess.Popen("./mag -bat batch.bat".split(), stdout=subprocess.PIPE, cwd=folder)
+    else:
+        process = subprocess.Popen("MagLi.exe -bat batch.bat".split(), stdout=subprocess.PIPE, cwd=folder)
     for z in np.linspace(start_z, end_z, steps):
         # Round to avoid floating point errors
         z = round(z, 6)
         if along_x:
-            data = read_batch_output(out_file_folder + "/along_x_z={0:f}.txt".format(z))
+            data = read_batch_output(os.path.join(folder, "along_x_z={0:f}.txt".format(z)))
         else:
-            data = read_batch_output(out_file_folder + "/along_y_z={0:f}.txt".format(z))
+            data = read_batch_output(os.path.join(folder, "along_y_z={0:f}.txt".format(z)))
         r = []
         By = []
         for line in data:
@@ -104,11 +105,10 @@ def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, al
     return z_to_strength
 
 
-def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=False, draw=True):
+def field_plot(in_file, z, radius, grid_square_length, force=False, draw=True):
     """
     Create a vector field plot of the magnetic or force field inside a magnet at a given z.
-    :param in_file: The .spc file describing the magnet.
-    :param out_file_folder: The folder to place output files in.
+    :param in_file: The .spc file describing the magnet. Should not include the path.
     :param z: The z value to display the field at.
     :param radius: The radius to measure field within. Should be less than the actual radius to avoid weirdness.
     :param grid_square_length: How far apart each vector's tail should be, in meters.
@@ -116,7 +116,8 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
     :param draw: Whether to draw the created plot.
     :return: Four lists: x, y, vector x components, and vector y components.
     """
-    with open(out_file_folder + "/batch.bat", "w") as f:
+    folder = "Specifications"
+    with open(os.path.join(folder, "batch.bat"), "w") as f:
         f.write("load(" + in_file + ",);\n")
         for y in np.arange(-radius, radius, grid_square_length):
             # Avoid floating point errors
@@ -132,7 +133,10 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
                                                                                                     grid_square_length,
                                                                                                     2. * start_x /
                                                                                                     grid_square_length))
-    process = subprocess.Popen("./mag -bat batch.bat".split(), stdout=subprocess.PIPE, cwd=out_file_folder)
+    if os.name == "posix":
+        process = subprocess.Popen("./mag -bat batch.bat".split(), stdout=subprocess.PIPE, cwd=folder)
+    else:
+        process = subprocess.Popen("MagLi.exe -bat batch.bat".split(), stdout=subprocess.PIPE, cwd=folder)
     output, error = process.communicate()
     x = []
     y = []
@@ -141,7 +145,7 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
     for file_y in np.arange(-radius, radius, grid_square_length):
         # Avoid floating point errors
         file_y = round(file_y, 6)
-        data = read_batch_output(out_file_folder + "/along_x_y={0:f}.txt".format(file_y))
+        data = read_batch_output(os.path.join(folder, "along_x_y={0:f}.txt".format(file_y)))
         for line in data:
             x.append(line[0])
             y.append(line[1])
@@ -169,11 +173,10 @@ def field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=Fa
         return x, y, Bx, By
 
 
-def field_animation(in_file, out_file_folder, start_z, end_z, steps, radius, grid_square_length, fps, force=False):
+def field_animation(in_file, start_z, end_z, steps, radius, grid_square_length, fps, force=False):
     """
     Animate the magnetic or force field of a manget along a range of Z values.
-    :param in_file: The .spc file describing the magnet.
-    :param out_file_folder: The folder to place output files in.
+    :param in_file: The .spc file describing the magnet. Should not include the path.
     :param start_z: The starting value of z.
     :param end_z: The final value of z.
     :param steps: How many values z should take on between the starting and final values.
@@ -183,7 +186,7 @@ def field_animation(in_file, out_file_folder, start_z, end_z, steps, radius, gri
     :param force: Whether to return the values for the force plot or the magnetic field plot.
     :return: The animation created.
     """
-    x, y, u, v = field_plot(in_file, out_file_folder, 0, radius, grid_square_length, force=force, draw=False)
+    x, y, u, v = field_plot(in_file, 0, radius, grid_square_length, force=force, draw=False)
     fig = plt.figure(figsize=(16, 12))
     # Force a square plot
     axes = plt.axes(xlim=(-radius * 1.1, radius * 1.1), ylim=(-radius * 1.1, radius * 1.1))
@@ -203,8 +206,7 @@ def field_animation(in_file, out_file_folder, start_z, end_z, steps, radius, gri
         :param z: The Z value to draw the quiver plot at
         :return: The updated quiver plot.
         """
-        _, _, new_u, new_v = field_plot(in_file, out_file_folder, z, radius, grid_square_length, force=force,
-                                        draw=False)
+        _, _, new_u, new_v = field_plot(in_file, z, radius, grid_square_length, force=force, draw=False)
         quiver.set_UVC(new_u, new_v)
         return quiver
 
@@ -215,3 +217,7 @@ def field_animation(in_file, out_file_folder, start_z, end_z, steps, radius, gri
     else:
         anim.save("B-field of " + in_file + " from Z=" + str(start_z) + " to Z=" + str(end_z) + ".mp4")
     return anim
+
+
+# strength_along_z("sextupole_routed.spc", -0.045, 0.045, 20, 0.015, True, 0.0245)
+field_plot("sextupole_routed.spc", 0, 0.03, 0.001)

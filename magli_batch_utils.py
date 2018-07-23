@@ -3,6 +3,7 @@ import numpy as np
 import numpy.polynomial.polynomial as poly
 import matplotlib.pyplot as plt
 import subprocess
+import os
 
 # The format of the .bat file that you plan on running in Magli is as so:
 # load(qmag83.spc, );
@@ -26,12 +27,10 @@ OUTPUT_COLUMN_MAP = {"x": 4, "y": 4, "z": 3}
 def run_tests_batched(in_file_prefix, out_file_prefix, min_a, max_a, step, tests_prefix):
     """
     Runs MagLi commands on any number of .spc files with names ending in "a.spc", where a is a number, and saves the
-    output as text files. This function interfaces with the command line so it only works on Unix-based systems like
-    Linux or MacOS.
+    output as text files. This should work on MacOS, Windows, and Linux but has only been tested on Linux.
     :param in_file_prefix: The prefix of where all the .spc files are. This should include the filename up to a,
-    complete with filepath.
-    :param out_file_prefix: The prefix for all the .bat files to be created. This should NOT contain the filepath
-    because the .bat files must go in the same folder as the .spc files.
+    but not the filepath.
+    :param out_file_prefix: The prefix for all the .bat files to be created. This should not contain the filepath.
     :param min_a: The minimum value of a.
     :param max_a: The maximum value of a.
     :param step: How much to change a by to get from one file to the next.
@@ -39,26 +38,34 @@ def run_tests_batched(in_file_prefix, out_file_prefix, min_a, max_a, step, tests
     the filename because a will appended to the end.
     """
     # The directory we want the output files to go in.
-    folder = "/".join(in_file_prefix.split("/")[:-1])
-    command = "#!/bin/bash\n" \
-              "cd " + folder + "\n"
+    folder = "Specifications"
+    command = ""
+    if os.name == "posix":
+        command += "#!/bin/bash\n"
+    command += "cd " + folder + "\n"
     for a in np.arange(min_a, max_a, step):
         a_str = "{0:g}".format(a)
-        with open(folder + "/" + out_file_prefix + a_str + ".bat", "w") as f:
-            f.write("load(" + in_file_prefix.split("/")[-1] + a_str + ".spc,);\n")
+        out_filename = out_file_prefix + a_str
+        with open(os.path.join(folder, out_filename + ".bat"), "w") as f:
+            f.write("load(" + in_file_prefix + a_str + ".spc,);\n")
             # Add the a value to the end of each test output filename to avoid overwriting
             for test in tests_prefix:
                 f.write(test + a_str + ".txt);\n")
-            # Add each .bat script to the .sh script
-            command += "./mag -bat " + out_file_prefix + a_str + ".bat" + "\n"
-    f = open(folder + "/" + out_file_prefix + "all.sh", "w")
+            # Add each .bat script to the script
+            if os.name == "posix":
+                command += "./mag"
+            else:
+                command += "MagLi.exe"
+            command += " -bat " + out_filename + ".bat" + "\n"
+    f = open(os.path.join(folder, out_file_prefix + "all.sh"), "w")
     f.write(command)
     f.close()
-    # Allow executing as a script
-    process = subprocess.Popen(("chmod a+x "+out_file_prefix+"all.sh").split(), stdout=subprocess.PIPE, cwd=folder)
+    if os.name == "posix":
+        # Allow executing as a script
+        subprocess.Popen(("chmod a+x " + out_file_prefix + "all.sh").split(), stdout=subprocess.PIPE, cwd=folder)
     # MagLi batching only allows one .spc file to be loaded per .bat file, so we have to make a Unix script to run
     # the batch file for each .spc.
-    subprocess.call(folder + "/" + out_file_prefix + "all.sh")
+    subprocess.call(os.path.join(folder, out_file_prefix + "all.sh"))
 
 
 def read_batch_output(filename):
@@ -138,13 +145,13 @@ def find_most_nth_magnet(in_file_prefix, n_poles, axis, min_a, max_a, step):
 
     # Plot output
     plt.plot(a_to_r_squared.keys(), a_to_r_squared.values())
-    plt.title("Effect of A on $R^2$ of "+str(degree)+" degree polynomial fit")
+    plt.title("Effect of A on $R^2$ of " + str(degree) + " degree polynomial fit")
     plt.xlabel("A")
     plt.ylabel("$R^2$")
     plt.show()
     plt.plot(a_to_strength.keys(), a_to_strength.values())
-    plt.title("Effect of A on "+str(n_poles)+"-pole strength")
+    plt.title("Effect of A on " + str(n_poles) + "-pole strength")
     plt.xlabel("A")
-    plt.ylabel("Strength ($\\frac{T}{m^"+str(degree)+"}$)")
+    plt.ylabel("Strength ($\\frac{T}{m^" + str(degree) + "}$)")
     plt.show()
     return a_to_r_squared

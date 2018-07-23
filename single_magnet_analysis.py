@@ -6,21 +6,23 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 
 
-def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, along_x):
+def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, along_x, edge_z):
     """
     Measure how the sextupole strength of a magnet varies with respect to z.
-    :param in_file: The .spc file representing the magner
+    :param in_file: The name .spc file representing the magnet. Should NOT include the path.
     :param out_file_folder: The folder to save the output files in.
     :param start_z: The starting value of z.
     :param end_z: The final value of z.
     :param steps: How many values z should take on between the starting and final values.
     :param radius: The radius to measure strength within. Should be less than the actual radius to avoid weirdness.
     :param along_x: Whether to measure strength along x or along y.
+    :param edge_z: The distance from the edge of the magnet to the center along z, in meters.
     :return: a dictionary mapping z-coordinate to sextupole strength.
     """
     # We want 1000 steps total, across the diameter.
     r_step = radius * 2. / 1000.
     z_to_strength = {}
+    z_to_r_squared = {}
     with open(out_file_folder + "/batch.bat", "w") as f:
         f.write("load(" + in_file + ",);\n")
         for z in np.linspace(start_z, end_z, steps):
@@ -55,14 +57,17 @@ def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, al
             By.append(line[4])
         r = np.array(r)
         By = np.array(By)
-        poly_fit = poly.polyfit(r, By, 2)
-        z_to_strength[z] = poly_fit[2] * 2.0
+        poly_fit = poly.polyfit(r, By, 2, full=True)
+        poly_function = poly.polyval(r, poly_fit[0])
+        # Calculate R^2
+        z_to_r_squared[z] = 1. - (poly_fit[1][0][0] / sum(poly_function ** 2))
+        z_to_strength[z] = poly_fit[0][2] * 2.0
     # Plot the strength along z.
     plt.plot(z_to_strength.keys(), z_to_strength.values())
-    # Plot the edges of the dipole magnet
-    plt.vlines(0.02113, min(z_to_strength.values()), max(z_to_strength.values()), colors="tab:orange",
+    # Plot the edges of the sextupole magnet
+    plt.vlines(edge_z, min(z_to_strength.values()), max(z_to_strength.values()), colors="tab:orange",
                linestyles="dashed")
-    plt.vlines(-0.02113, min(z_to_strength.values()), max(z_to_strength.values()), colors="tab:orange",
+    plt.vlines(-edge_z, min(z_to_strength.values()), max(z_to_strength.values()), colors="tab:orange",
                linestyles="dashed")
     # Plot y = 0
     plt.hlines(0, start_z, end_z, linestyles="dashed")
@@ -72,6 +77,21 @@ def strength_along_z(in_file, out_file_folder, start_z, end_z, steps, radius, al
         plt.title("Strength of " + in_file + " along x with radius " + str(radius))
     else:
         plt.title("Strength of " + in_file + " along y with radius " + str(radius))
+    plt.show()
+
+    # Plot the R^2 along z
+    plt.plot(z_to_r_squared.keys(), z_to_r_squared.values())
+    # Plot the edges of the sextupole magnet
+    plt.vlines(edge_z, min(z_to_r_squared.values()), max(z_to_r_squared.values()), colors="tab:orange",
+               linestyles="dashed")
+    plt.vlines(-edge_z, min(z_to_r_squared.values()), max(z_to_r_squared.values()), colors="tab:orange",
+               linestyles="dashed")
+    plt.xlabel("Z (meters)")
+    plt.ylabel("$R^2$")
+    if along_x:
+        plt.title("$R^2$ of " + in_file + " along x with radius " + str(radius))
+    else:
+        plt.title("$R^2$ of " + in_file + " along y with radius " + str(radius))
     plt.show()
     # Print useful numbers
     print("Integral: " + str(

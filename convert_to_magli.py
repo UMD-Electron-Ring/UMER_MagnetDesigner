@@ -129,21 +129,23 @@ def arc(center_z, radius, start_angle, end_angle, x_rot, y_rot, z_rot, segments,
         center_z / 1000., x_rot, y_rot, z_rot, start_angle, end_angle, radius / 1000., current, segments)
 
 
-def line(center_x, center_y, center_z, length, current):
+def line(center_x, center_y, center_z, length, segments, current):
     """
     Convert information about a line of wire to a MagLi command.
     :param center_x: The x coordinate of the center of the line.
     :param center_y: The y coordinate of the center of the line.
     :param center_z: The z coordinate of the center of the line.
     :param length: The length of the wire.
+    :param segments: How many line segments should be used to draw the line.
     :param current: The current flowing through the wire. Positive current flows one way and negative flows the other
     but the manual doesn't say which is which.
     :return: A string representing the line as a MagLi command.
     """
-    return "line(2, {0:.5f}, {1:.5f}, {2:.5f}, 0, 0, 0, {3:.5f}, {4:.5f}, 1);\n".format(center_x / 1000.,
-                                                                                        center_y / 1000.,
-                                                                                        center_z / 1000.,
-                                                                                        length / 1000., current)
+    return "line(2, {0:.5f}, {1:.5f}, {2:.5f}, 0, 0, 0, {3:.5f}, {4:.5f}, {5:d});\n".format(center_x / 1000.,
+                                                                                            center_y / 1000.,
+                                                                                            center_z / 1000.,
+                                                                                            length / 1000., current,
+                                                                                            segments)
 
 
 def x_to_angle(angle_reference, radius, x):
@@ -195,7 +197,7 @@ def write_magli(filename, mode, wires, current, radius, angle_reference, segment
                 current_mult = -1
             else:
                 current_mult = 1
-            lines += line(xy[0], xy[1], (wire.y1 + wire.y2) / 2., wire.length(), current_mult * current)
+            lines += line(xy[0], xy[1], (wire.y1 + wire.y2) / 2., wire.length(), segments, current_mult * current)
     f.write(lines)
     f.write(arcs)
     f.close()

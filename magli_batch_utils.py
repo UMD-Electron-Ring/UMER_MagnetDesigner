@@ -57,15 +57,19 @@ def run_tests_batched(in_file_prefix, out_file_prefix, min_a, max_a, step, tests
             else:
                 command += "MagLi.exe"
             command += " -bat " + out_filename + ".bat" + "\n"
-    f = open(os.path.join(folder, out_file_prefix + "all.sh"), "w")
+    if os.name == "posix":
+        command_name = out_file_prefix + "all.sh"
+    else:
+        command_name = out_file_prefix + "all.cmd"
+    f = open(os.path.join(folder, command_name), "w")
     f.write(command)
     f.close()
     if os.name == "posix":
         # Allow executing as a script
-        subprocess.Popen(("chmod a+x " + out_file_prefix + "all.sh").split(), stdout=subprocess.PIPE, cwd=folder)
+        subprocess.Popen(("chmod a+x " + command_name).split(), stdout=subprocess.PIPE, cwd=folder)
     # MagLi batching only allows one .spc file to be loaded per .bat file, so we have to make a Unix script to run
     # the batch file for each .spc.
-    subprocess.call(os.path.join(folder, out_file_prefix + "all.sh"))
+    subprocess.call(os.path.join(folder, command_name))
 
 
 def read_batch_output(filename):

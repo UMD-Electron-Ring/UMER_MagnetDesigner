@@ -73,7 +73,7 @@ def strength_along_z(in_file, start_z, end_z, steps, radius, along_x, edge_z):
     # Plot y = 0
     plt.hlines(0, start_z, end_z, linestyles="dashed")
     plt.xlabel("Z (meters)")
-    plt.ylabel("Sextupole Strength (T/(m^2))")
+    plt.ylabel("Sextupole Strength ($\\frac{T}{m^2}$)")
     if along_x:
         plt.title("Strength of " + in_file + " along x with radius " + str(radius))
     else:

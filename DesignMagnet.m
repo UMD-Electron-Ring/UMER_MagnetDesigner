@@ -13,8 +13,8 @@ PCBfilename = 'PCBdata';
 
 L = 46.5;  % Length of magnet
 HousingRadius = 29.35;   % 29.35 I calculated this as 29.329 mm (from pcb width)
-Multipole = 6;  % Octupole
-spirals = 13;
+Multipole = 8;  % Octupole
+spirals = 10;
 a = .953;   % Optimization parameter
 
 
@@ -149,7 +149,7 @@ TopRightSpiral = horzcat(TopRightSpiral, ...
 %      This we can expt with.  I started with an extra dz down from L/2
 
 % BotLeft
-BotLeftSpiral = horzcat([BotLeftSpiral(1,1); -(L/2)-dz], BotLeftSpiral);
+BotLeftSpiral = horzcat([BotLeftSpiral(1,1); -(L/2)], BotLeftSpiral);
 
 % TopRight Outside via align with BotLeft
 % DONT MODIFY (it's the above reflected over x axis)
@@ -187,8 +187,7 @@ TopRightSpiral = horzcat([-BotLeftSpiral(1,1); BotLeftSpiral(2,1)], ...
 PCB = {TopRightSpiral, ...
        flip(BotRightSpiral,2), ...
        TopLeftSpiral, ...
-       flip(BotLeftSpiral,2)
-       };
+       flip(BotLeftSpiral,2)};
    
 
 %% Export Data for PCB design

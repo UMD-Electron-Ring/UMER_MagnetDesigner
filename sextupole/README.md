@@ -25,7 +25,7 @@ on Windows or
 ./runall.sh [min_spacing] [max_spacing] [spacing_step] [design radius]
 ```
 on Mac/Linux. The spacing values are arbitrary unitless, usually around 1. I'd recommend playing around with spacing
-values, using the [non-batched version](..) to generate files and Eagle to view them, to get a feel for what the 
+values, using the [non-batched version](../../..) to generate files and Eagle to view them, to get a feel for what the 
 values mean. The design radius, which is in millimeters, determines the PCB width- the magnet will have a width equal
 to half of the circumference of the circle defined by the design radius. All values generated are per amp.
 ### Everything else

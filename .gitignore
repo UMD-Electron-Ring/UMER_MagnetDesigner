@@ -5,9 +5,9 @@
 PCBdata
 octave-workspace
 .idea/
-PCBData/
-BoardMacros/
-Specifications/*
-!Specifications/mag
-!Specifications/MagLi.exe
+sextupole/BoardMacros/
+sextupole/PCBData/
+sextupole/Specifications/*
+!sextupole/Specifications/mag
+!sextupole/Specifications/MagLi.exe
 __pycache__/

@@ -2,9 +2,8 @@
 
 # Description
 
-Easily generate octupole printed circuit magnet designs for particle accelerator
-nonlinear optics.
-
+Easily generate octupole or sextupole printed circuit magnet designs for particle accelerator nonlinear optics.
+The sextupole code is [here](sextupole).
 
 # Dependencies
 
@@ -30,3 +29,6 @@ Once satisfied with the design:
 
 ### To clean the directory
 Run (double-click) `cleandir.cmd`
+
+# Sample Output
+![Sample Octupole](screenshot2.png)

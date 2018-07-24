@@ -1,3 +1,13 @@
 *.asv
 *.mat
-BoardMacro.scr
+*.scr
+!LogoMacroPCB.scr
+PCBdata
+octave-workspace
+.idea/
+sextupole/BoardMacros/
+sextupole/PCBData/
+sextupole/Specifications/*
+!sextupole/Specifications/mag
+!sextupole/Specifications/MagLi.exe
+__pycache__/

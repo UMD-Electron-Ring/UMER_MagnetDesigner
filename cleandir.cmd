@@ -6,11 +6,13 @@ for %%i in (*) do (
                 if not %%~xi == .cam (
                     if not %%~xi == .docx (
                         if not %%i == LogoMacroPCB.scr (
-                            if not %%i == README.txt (
-                                if not %%i == .gitignore (
-				    if not %%~xi == .png (
-                                        del %%i
-			            )
+                            if not %%i == .gitignore (
+                                if not %%~xi == .png (
+                                    if not %%~xi == .md (
+                                        if not %%~xi == .sh (
+                                            del %%i
+                                        )
+                                    )
                                 )
                             )
                         )
